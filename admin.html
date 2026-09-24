@@ -53,8 +53,19 @@
   .kv .k{color:var(--ink-soft);}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .empty{border:1px solid var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--ink-soft);background:#fff;}
+  .crow{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .clabel{width:200px;flex:none;font-size:13px;}
+  .ctrack{flex:1;height:12px;background:#EEF2F7;border-radius:6px;overflow:hidden;}
+  .cfill{height:100%;background:var(--ochre);border-radius:6px;}
+  .cfill.dark{background:var(--ink);}
+  .cval{width:64px;flex:none;text-align:right;font-family:'JetBrains Mono';font-size:11.5px;}
+  .ctrack2{flex:1;display:flex;flex-direction:column;gap:3px;}
+  .mini{height:9px;background:#EEF2F7;border-radius:5px;overflow:hidden;}
+  .mini>div{height:100%;border-radius:5px;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);margin:4px 0 10px;}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
   details summary{cursor:pointer;font-size:12.5px;color:var(--ink-soft);margin:8px 0 6px;}
-  @media (max-width:640px){ .kv{grid-template-columns:1fr;} .wrap{padding:18px 12px 70px;} }
+  @media (max-width:640px){ .kv{grid-template-columns:1fr;} .wrap{padding:18px 12px 70px;} .clabel{width:112px;font-size:12px;} }
 </style>
 </head>
 <body>
@@ -76,6 +87,10 @@
 const CFG_KEY='admin:cfg', TOK_KEY='admin:tok';
 const SET_ORDER=['idp_prep','seamind','ikigai_self','evp_self'];
 const SET_NAMES={idp_prep:'เตรียมตัว IDP', seamind:'บุคลิก & แรงจูงใจ', ikigai_self:'งานที่ใช่ (IKIGAI)', evp_self:'ทำไมถึงอยู่กับเรา'};
+/* แผนที่ตรรกะคำถาม (ตัดมาจาก index.html ให้เหลือเฉพาะส่วนที่ใช้คำนวณกราฟ): SM_A_MAP[ข้อ][ตัวเลือก] = มิติบุคลิกที่ได้คะแนน */
+const SM_A_MAP=[[["social","tradition"],["reflection","emotion"],["innovation","action"],["tradition","logic"]],[["logic"],["social","emotion"],["action","innovation"],["tradition","reflection"]],[["tradition","logic"],["action","innovation"],["social"],["reflection","logic"]],[["individual","action"],["social","emotion"],["reflection","logic"],["innovation"]],[["innovation","logic"],["social","emotion"],["individual","reflection"],["tradition","logic"]],[["logic","social"],["emotion","reflection"],["action","tradition"],["individual","logic"]],[["emotion","social"],["individual"],["action","logic"],["reflection","logic"]],[["tradition","logic"],["social","emotion"],["action","innovation"],["tradition","reflection"]],[["social"],["individual","reflection"],["logic","reflection"],["action"]],[["social","emotion"],["logic","reflection"],["emotion","tradition"],["action"]],[["tradition","logic"],["social","emotion"],["innovation","individual"],["reflection","individual"]],[["innovation","logic"],["emotion","social"],["tradition","reflection"],["individual","action"]],[["logic","social"],["innovation","emotion"],["reflection","emotion"],["emotion","innovation"]],[["logic","reflection"],["social","emotion"],["action","innovation"],["tradition","social"]],[["innovation"],["social","emotion"],["logic","reflection"],["action","tradition"]],[["individual","logic"],["social","emotion"],["innovation","action"],["tradition","social"]]];
+const TRAIT_PAIRS=[['logic','ใช้เหตุผล','emotion','ใช้ความรู้สึก'],['action','ลงมือเร็ว','reflection','ไตร่ตรองก่อน'],['tradition','ยึดระบบ','innovation','สร้างสรรค์'],['social','ทำกับคน','individual','ทำคนเดียว']];
+const EVP_PILLARS=[["rewards","ค่าตอบแทน & ความมั่นคง"],["opportunity","โอกาสเติบโต & การเรียนรู้"],["org","องค์กร & ลักษณะงาน"],["people","เพื่อนร่วมงาน & หัวหน้า"],["worklife","ชีวิตส่วนตัว & ความยืดหยุ่นในการทำงาน"]];
 let CFG={url:'',anonKey:''}, TOK=null, ROWS=null, DETAIL=null;
 
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
@@ -179,15 +194,22 @@ function renderLocal(){
   renderDashboard();
 }
 function renderDemoMulti(){
+  const a1=[0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1], a2=[2,0,3,0,1,3,2,0,1,0,3,1,2,3,1,0], a3=[3,2,0,3,0,1,0,2,3,0,1,2,0,1,3,2];
   ROWS=[
     {session_id:'s-demo-1',skey:'idp_prep',payload:{t1:'ทดสอบ: ดูแลแคมเปญโฆษณา',t2:'ทดสอบ: วิเคราะห์ยอดขาย',s:'ตรงเวลา',d:'พูดหน้าคนหลายคน'},created_at:'2026-09-24T09:11:00Z'},
-    {session_id:'s-demo-1',skey:'seamind',payload:{a:[0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1],b:[0,1,1,0,1,0,1,1,0,1,0,1],c:{c1:1,c2:[0,3],c3:0,c4:[1],c7:[0]}},created_at:'2026-09-24T09:14:00Z'},
+    {session_id:'s-demo-1',skey:'seamind',payload:{a:a1,b:[0,1,1,0,1,0,1,1,0,1,0,1],c:{c1:1,c2:[0,3],c3:0,c4:[1],c7:[0]}},created_at:'2026-09-24T09:14:00Z'},
     {session_id:'s-demo-1',skey:'evp_self',payload:{enps:9,pillars:{rewards:{good:3,important:5},opportunity:{good:4,important:4},org:{good:4,important:3},worklife:{good:5,important:4},people:{good:5,important:5}},reasons:[3,4]},created_at:'2026-09-24T09:15:00Z'},
     {session_id:'s-demo-2',skey:'idp_prep',payload:{t1:'ทดสอบ: ออกแบบลายเสื้อ',t2:'ทดสอบ: แก้ไฟล์ฉุกเฉิน',s:'ใจเย็น',d:'วางแผนล่วงหน้า'},created_at:'2026-09-24T10:02:00Z'},
     {session_id:'s-demo-2',skey:'ikigai_self',payload:{circles:{love:7,good:8,world:5,paid:6},ik9:[4,3,4,3,4,3,4,3,3]},created_at:'2026-09-24T10:05:00Z'},
+    {session_id:'s-demo-3',skey:'seamind',payload:{a:a2,b:[1,0,0,1,0,1,0,0,1,0,1,0],c:{c1:2,c3:1,c7:[2]}},created_at:'2026-09-24T11:00:00Z'},
+    {session_id:'s-demo-3',skey:'ikigai_self',payload:{circles:{love:5,good:7,world:4,paid:5},ik9:[3,3,3,2,3,3,2,3,3]},created_at:'2026-09-24T11:02:00Z'},
+    {session_id:'s-demo-3',skey:'evp_self',payload:{enps:7,pillars:{rewards:{good:3,important:4},opportunity:{good:3,important:5},org:{good:3,important:3},worklife:{good:4,important:4},people:{good:4,important:4}},reasons:[0,3]},created_at:'2026-09-24T11:03:00Z'},
+    {session_id:'s-demo-4',skey:'ikigai_self',payload:{circles:{love:3,good:6,world:4,paid:7},ik9:[2,3,2,3,3,2,3,2,3]},created_at:'2026-09-24T12:00:00Z'},
+    {session_id:'s-demo-4',skey:'evp_self',payload:{enps:5,pillars:{rewards:{good:2,important:5},opportunity:{good:2,important:5},org:{good:3,important:3},worklife:{good:3,important:4},people:{good:4,important:4}},reasons:[0]},created_at:'2026-09-24T12:01:00Z'},
+    {session_id:'s-demo-5',skey:'seamind',payload:{a:a3,b:[3,2,3,2,3,2,3,2,3,2,3,2],c:{c1:0,c3:2}},created_at:'2026-09-24T13:00:00Z'},
   ];
   document.getElementById('modePill').textContent='ข้อมูลตัวอย่าง';
-  document.getElementById('content').innerHTML='<div class="banner"><i class="ti ti-flask"></i><span><b>ข้อมูลตัวอย่าง:</b> สร้างขึ้นมาให้ดูหน้าตา 2 เครื่อง 5 ชุดคำตอบ ไม่ใช่คำตอบจริงของใคร</span></div>';
+  document.getElementById('content').innerHTML='<div class="banner"><i class="ti ti-flask"></i><span><b>ข้อมูลตัวอย่าง:</b> สร้างขึ้นมาให้ดูหน้าตา 5 เครื่อง 11 ชุดคำตอบ ไม่ใช่คำตอบจริงของใคร</span></div>';
   renderDashboard();
 }
 
@@ -218,6 +240,75 @@ function detailHTML(skey,p){
     +'<details><summary>ค่าดิบทั้งหมด (JSON)</summary><pre>'+esc(JSON.stringify(p,null,1))+'</pre></details>';
 }
 
+/* ================= กราฟสรุปทั้งองค์กร ================= */
+function latestBySession(){
+  const m=new Map();
+  ROWS.forEach(r=>{
+    const k=r.session_id+'|'+r.skey, cur=m.get(k);
+    if(!cur||(r.created_at||'')>(cur.created_at||'')) m.set(k,r);
+  });
+  return [...m.values()];
+}
+function avg(arr){ return arr.length? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
+function renderCharts(){
+  const latest=latestBySession();
+  const evps=latest.filter(r=>r.skey==='evp_self'&&r.payload&&r.payload.pillars);
+  const iks=latest.filter(r=>r.skey==='ikigai_self'&&r.payload&&r.payload.circles);
+  const sms=latest.filter(r=>r.skey==='seamind'&&r.payload&&Array.isArray(r.payload.a)&&r.payload.a.some(x=>x!=null));
+  let h='';
+  /* --- เสา EVP: ทำได้จริง เทียบ สำคัญกับพวกเรา --- */
+  if(evps.length){
+    let rows='';
+    EVP_PILLARS.forEach(([k,l])=>{
+      const g=evps.map(r=>r.payload.pillars[k]&&r.payload.pillars[k].good).filter(x=>x!=null);
+      const im=evps.map(r=>r.payload.pillars[k]&&r.payload.pillars[k].important).filter(x=>x!=null);
+      const gp=avg(g), ip=avg(im);
+      rows+=`<div class="crow"><div class="clabel">${l}</div><div class="ctrack2">
+        <div class="mini"><div style="width:${gp!=null?Math.round(gp/5*100):0}%;background:var(--ochre);"></div></div>
+        <div class="mini"><div style="width:${ip!=null?Math.round(ip/5*100):0}%;background:var(--ink);"></div></div>
+      </div><div class="cval">${gp!=null&&ip!=null?(gp/5*100).toFixed(0)+'% / '+(ip/5*100).toFixed(0)+'%':'-'}</div></div>`;
+    });
+    const enps=evps.map(r=>r.payload.enps).filter(x=>x!=null);
+    const ea=avg(enps);
+    const buck=[[9,10,'ชอบมาก (9-10)'],[7,8,'เฉยๆ (7-8)'],[0,6,'ไม่ค่อยชอบ (0-6)']].map(([lo,hi,l])=>{
+      const n=enps.filter(v=>v>=lo&&v<=hi).length;
+      return `<div class="crow"><div class="clabel">${l}</div><div class="ctrack"><div class="cfill${hi===8?' dark':''}" style="width:${evps.length?Math.round(n/evps.length*100):0}%"></div></div><div class="cval">${n} คน</div></div>`;
+    }).join('');
+    h+=`<h3 style="margin-top:18px;">ความรู้สึกต่อบริษัท <span class="pill grey">จาก ${evps.length} คน</span>${ea!=null?` <span class="pill blue">เฉลี่ยแนะนำที่ทำงาน ${ea.toFixed(1)}/10</span>`:''}</h3>
+    <div class="legend"><span><span class="dot" style="background:var(--ochre);"></span>บริษัททำได้จริง (เฉลี่ย)</span><span><span class="dot" style="background:var(--ink);"></span>สำคัญกับพวกเรา (เฉลี่ย)</span></div>
+    ${rows}
+    <div class="hint" style="margin-bottom:6px;">แถบบน (น้ำเงิน) สั้นกว่าแถบล่าง (ดำ) ต้นไหน = เรื่องนั้นสำคัญกับคนทำงานแต่บริษัทยังทำได้ไม่พอ คือจุดควรแก้ก่อน</div>
+    ${buck}`;
+  }
+  /* --- บุคลิกเฉลี่ย 4 คู่ --- */
+  if(sms.length){
+    let rows='';
+    TRAIT_PAIRS.forEach(([k1,l1,k2,l2])=>{
+      const shares=[];
+      sms.forEach(r=>{
+        const c={}; r.payload.a.forEach((oi,qi)=>{ if(oi!=null&&SM_A_MAP[qi]&&SM_A_MAP[qi][oi]) SM_A_MAP[qi][oi].forEach(t=>c[t]=(c[t]||0)+1); });
+        const tot=(c[k1]||0)+(c[k2]||0);
+        if(tot>0) shares.push((c[k1]||0)/tot*100);
+      });
+      const a1=avg(shares);
+      if(a1!=null) rows+=`<div class="crow"><div class="clabel">${l1} ↔ ${l2}</div><div class="ctrack"><div class="cfill" style="width:${Math.round(a1)}%"></div></div><div class="cval">${Math.round(a1)} : ${100-Math.round(a1)}</div></div>`;
+    });
+    if(rows) h+=`<h3 style="margin-top:18px;">บุคลิกทีมโดยเฉลี่ย <span class="pill grey">จาก ${sms.length} คน</span></h3>
+    <div class="legend"><span>แถบน้ำเงิน = สัดส่วนฝั่งซ้าย เหลือคือฝั่งขวา (เช่น 70:30 คือทีมเอนไปทางซ้ายมาก)</span></div>${rows}`;
+  }
+  /* --- IKIGAI 4 วงเฉลี่ย --- */
+  if(iks.length){
+    const rows=IK_KEYS.map(([k,l])=>{
+      const a=avg(iks.map(r=>r.payload.circles[k]).filter(x=>x!=null));
+      return `<div class="crow"><div class="clabel">${l}</div><div class="ctrack"><div class="cfill" style="width:${a!=null?Math.round(a*10):0}%"></div></div><div class="cval">${a!=null?a.toFixed(1)+'/10':'-'}</div></div>`;
+    }).join('');
+    h+=`<h3 style="margin-top:18px;">ความรู้สึกมีคุณค่าในงาน (IKIGAI) เฉลี่ย <span class="pill grey">จาก ${iks.length} คน</span></h3>${rows}`;
+  }
+  if(!h) return '';
+  return `<div class="card"><h3><i class="ti ti-chart-bar" style="font-size:17px;"></i> ภาพรวมทั้งองค์กร</h3><div class="hint" style="margin:-6px 0 4px;">คำนวณจากคำตอบล่าสุดของแต่ละเครื่อง (คนละชุดนับครั้งเดียว)</div>${h}</div>`;
+}
+const IK_KEYS=[['love','รักงานนี้'],['good','เก่งงานนี้'],['world','โลกต้องการ'],['paid','ได้ผลตอบแทน']];
+
 /* ================= หน้ารวม ================= */
 function renderDashboard(){
   const bySess=new Map();
@@ -236,6 +327,7 @@ function renderDashboard(){
     <div class="stat"><div class="l">ชุดคำตอบที่ส่งมา</div><div class="v">${ROWS.length}</div></div>
     ${SET_ORDER.map(s=>`<div class="stat"><div class="l">${SET_NAMES[s]}</div><div class="v">${perSet[s]}</div></div>`).join('')}
   </div>
+  ${renderCharts()}
   <div class="card">
     <h3>รายชื่อเครื่องที่ตอบ</h3>
     <div style="overflow-x:auto;">

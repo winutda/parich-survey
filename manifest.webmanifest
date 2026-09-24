@@ -1,0 +1,15 @@
+{
+  "name": "แบบสอบถามพนักงาน · The Parich",
+  "short_name": "แบบสอบถาม",
+  "description": "ชุดแบบสอบถามสะท้อนตัวเอง บุคลิก แรงจูงใจ IKIGAI และเหตุผลที่อยู่กับบริษัท",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

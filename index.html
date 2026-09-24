@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ระบบประเมินคน → IDP (The Parich)</title>
+<meta name="theme-color" content="#111111">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="แบบสอบถาม">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<style>
+  :root{
+    /* Monochrome base + one cool accent (blue) — contrast from weight + space, accent reserved for action/state */
+    --ink:#111111;        /* near-black: primary surfaces, active */
+    --ink-2:#000000;      /* pure black: hover */
+    --ink-soft:#6B6B6B;   /* mid grey: secondary text */
+    --paper:#FFFFFF;      /* page background */
+    --paper-2:#FFFFFF;    /* card background */
+    --ochre:#1D4ED8;      /* accent: blue — สีประจำการลงมือและสถานะที่เลือก */
+    --ochre-light:#DBEAFE;/* selection / soft highlight */
+    --brick:#111111;      /* danger/flag → black (rely on icon + label, not colour) */
+    --brick-soft:#F4F4F4; /* soft flag bg */
+    --teal:#111111;       /* success → black */
+    --teal-soft:#F4F4F4;  /* soft success bg */
+    --charcoal:#1A1A1A;   /* body text */
+    --line:#E5E5E5;       /* hairline border */
+    --line-2:#CFCFCF;     /* stronger border */
+    --radius:8px;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 1px 0 rgba(0,0,0,.03);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    background:var(--paper);
+    color:var(--charcoal);
+    font-family:'Sarabun',sans-serif;
+    font-size:15.5px;
+    line-height:1.6;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3,h4,.display{font-family:'Kanit',sans-serif;letter-spacing:.01em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:var(--ink);}
+  ::selection{background:var(--ochre-light);}
+  :focus-visible{outline:2px solid var(--ochre);outline-offset:2px;border-radius:4px;}
+
+  /* ---- Layout ---- */
+  .app{display:flex;min-height:100vh;}
+  .rail{
+    width:236px;flex:none;background:var(--ink);color:#EDEDED;
+    padding:22px 0 22px 0; position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .rail-brand{padding:0 20px 18px 20px;border-bottom:1px solid rgba(255,255,255,.14);margin-bottom:10px;}
+  .rail-brand .k{font-family:'Kanit';font-weight:700;font-size:20px;color:#fff;line-height:1.15;}
+  .rail-brand .s{font-size:12.5px;color:#B0B0B0;margin-top:4px;}
+  .tab{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 18px 11px 14px;cursor:pointer;color:#D6D6D6;
+    border-left:3px solid transparent; position:relative;
+    transition:background .12s ease, color .12s ease;
+  }
+  .tab:hover{background:rgba(255,255,255,.06);}
+  .tab.active{background:var(--paper-2);color:var(--ink);border-left-color:var(--ochre);}
+  .tab.active .tag{background:var(--ochre);color:#fff;}
+  .tab .tag{
+    font-family:'JetBrains Mono';font-size:11px;font-weight:600;
+    background:rgba(255,255,255,.12);color:#EDEDED;
+    padding:2px 6px;border-radius:4px;flex:none;
+  }
+  .tab .lbl{font-size:14px;font-weight:500;}
+  .tab .ic{font-size:16px;color:#8F8F8F;flex:none;width:18px;text-align:center;}
+  .tab.active .ic{color:var(--ochre);}
+  .tab .sub{font-size:11px;color:#C9C9C9;display:block;}
+  .tab.active .sub{color:var(--ink-soft);}
+  .rail-foot{padding:16px 18px 4px;font-size:11px;color:#BDBDBD;border-top:1px solid rgba(255,255,255,.12);margin-top:12px;}
+
+  .main{flex:1;min-width:0;}
+  .statusbar{
+    position:sticky;top:0;z-index:5;height:34px;
+    background:var(--paper-2);border-bottom:1px solid var(--line);
+  }
+  .statusbar .status{position:absolute;right:28px;top:8px;font-size:12.5px;color:var(--ink-soft);font-family:'JetBrains Mono';}
+  .statusbar .status.warn{color:var(--brick);}
+
+  .content{padding:30px 32px 80px;max-width:920px;}
+
+  /* ---- Cards / forms ---- */
+  .card{
+    background:var(--paper-2);border:1px solid var(--line);border-radius:12px;
+    padding:22px 24px;margin-bottom:18px;box-shadow:var(--shadow);
+  }
+  .card-tight{padding:14px 16px;}
+  .section-head{display:flex;align-items:baseline;gap:10px;margin:30px 0 12px;}
+  .section-head:first-child{margin-top:0;}
+  .section-head .num{
+    font-family:'JetBrains Mono';font-weight:600;font-size:12.5px;
+    background:var(--ink);color:#EDEDED;padding:3px 8px;border-radius:5px;
+  }
+  .section-head h2{font-size:19px;margin:0;color:var(--ink);}
+  .section-desc{font-size:13.5px;color:var(--ink-soft);margin:-4px 0 16px;}
+
+  .q{margin-bottom:20px;}
+  .q:last-child{margin-bottom:0;}
+  .q-id{
+    display:inline-block;font-family:'JetBrains Mono';font-size:11.5px;font-weight:600;
+    background:var(--paper);border:1px solid var(--line-2);color:var(--ink-soft);
+    padding:1px 7px;border-radius:5px;margin-right:8px;
+  }
+  .q-text{font-size:15px;font-weight:500;color:var(--charcoal);}
+  .opts{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+  .opt{
+    display:flex;gap:9px;align-items:flex-start;padding:9px 11px;border-radius:8px;
+    border:1.5px solid var(--line);cursor:pointer;background:#fff;font-size:14px;
+    transition:border-color .12s, background .12s;
+  }
+  .opt:hover{border-color:var(--ink);background:#FAFAFA;}
+  .opt.checked{border-color:var(--ochre);background:var(--ochre-light);}
+  .opt input{margin-top:2px;accent-color:var(--ochre);flex:none;}
+  .opt .k{font-family:'JetBrains Mono';font-weight:700;color:var(--ochre);flex:none;}
+  textarea, .txt{
+    width:100%;font-family:'Sarabun';font-size:14px;padding:9px 11px;border:1.5px solid var(--line-2);
+    border-radius:8px;background:#fff;color:var(--charcoal);resize:vertical;
+  }
+  textarea{min-height:64px;}
+  .row{display:flex;gap:14px;flex-wrap:wrap;}
+  .slider-row{display:flex;align-items:center;gap:12px;margin-top:6px;}
+    .slider-row input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:28px;background:transparent;cursor:pointer;}
+  .slider-row input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--line-2);border-radius:2px;}
+  .slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:var(--ochre);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);margin-top:-10px;cursor:pointer;}
+  .slider-row input[type=range]::-moz-range-track{height:4px;background:var(--line-2);border-radius:2px;}
+  .slider-row input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--ochre);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer;}
+  .slider-row .val{font-family:'JetBrains Mono';font-weight:700;color:var(--ink);width:28px;text-align:center;}
+  .hint{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+
+  .btn{
+    font-family:'Sarabun';font-weight:600;font-size:14px;border:none;border-radius:8px;
+    padding:10px 18px;cursor:pointer;background:var(--ink);color:#fff;
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.14);}
+  .btn:active{transform:translateY(0) scale(.98);box-shadow:none;}
+  .btn.ochre{background:var(--ochre);}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line-2);}
+  .btn.ghost:hover{background:var(--paper);border-color:var(--ink);}
+  .btn.danger{background:#FFFFFF;color:var(--brick);border:1.5px solid var(--brick);}
+  .btn.danger:hover{background:var(--brick-soft);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+
+  .banner{
+    display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:8px;
+    font-size:13.5px;margin-bottom:16px;
+  }
+  .banner.info{background:#F4F4F4;color:var(--ink-2);}
+  .banner.warn{background:var(--brick-soft);color:#111111;}
+  .banner.good{background:var(--teal-soft);color:#111111;}
+
+  /* ---- field guide (interviewer mode) ---- */
+  .fg-card{border-left:4px solid var(--ochre);}
+  .fg-q{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+  .fg-toggle{
+    font-size:12.5px;color:var(--ink-soft);cursor:pointer;text-decoration:underline dotted;
+    background:none;border:none;padding:0;margin:2px 0 8px;font-family:'Sarabun';
+  }
+  .fg-hints{display:none;background:var(--paper);border-radius:7px;padding:10px 12px;margin-bottom:10px;font-size:13px;}
+  .fg-hints.open{display:block;}
+  .fg-hints .h{margin-bottom:5px;}
+  .fg-hints .h:last-child{margin-bottom:0;}
+  .rubric{display:flex;gap:6px;margin:8px 0;}
+  .rubric button{
+    font-family:'JetBrains Mono';font-weight:700;font-size:13px;width:34px;height:34px;
+    border-radius:7px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;
+  }
+  .rubric button.sel{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .flag-chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--brick);margin-top:4px;}
+
+  /* ---- results ---- */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:14px 0;}
+  .stat{background:var(--paper);border-radius:8px;padding:12px 14px;}
+  .stat .l{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .stat .v{font-family:'Kanit';font-weight:700;font-size:22px;color:var(--ink);}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:13px;}
+  .bar-row .lbl{width:96px;flex:none;color:var(--ink-soft);}
+  .bar-track{flex:1;height:9px;background:var(--paper);border-radius:5px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--ochre);}
+  .bar-row .num{width:26px;text-align:right;font-family:'JetBrains Mono';font-size:12px;}
+  .pill{
+    display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;
+    font-family:'JetBrains Mono';
+  }
+  .pill.green{background:var(--teal-soft);color:#111111;}
+  .pill.yellow{background:#F7F7F7;color:#111111;border:1px solid #E2E2E2;}
+  .pill.red{background:var(--brick-soft);color:#111111;}
+  .pill.grey{background:#F4F4F4;color:#6B6B6B;border:1px solid #E5E5E5;}
+
+  table.plain{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.plain th{text-align:left;font-size:11.5px;text-transform:uppercase;color:var(--ink-soft);padding:6px 8px;border-bottom:1.5px solid var(--line-2);}
+  table.plain td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+
+  .empty{
+    border:1px solid var(--line);border-radius:12px;padding:26px;text-align:center;color:var(--ink-soft);
+  }
+
+  .home-hero{background:linear-gradient(140deg,#0B0C10 0%,#141821 60%,#1A2333 100%);color:#EDEDED;border-radius:16px;padding:36px 34px 30px;margin-bottom:24px;position:relative;overflow:hidden;}
+  .home-hero:before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 88% 8%,rgba(59,130,246,.35) 0,transparent 42%),radial-gradient(circle at -5% 110%,rgba(59,130,246,.16) 0,transparent 38%),radial-gradient(circle,rgba(255,255,255,.05) 0,transparent 55%);}
+  .home-hero:after{content:"";position:absolute;left:34px;right:34px;bottom:0;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--ochre),rgba(59,130,246,0) 78%);}
+  .home-hero .eyebrow{position:relative;font-family:'JetBrains Mono';font-size:12px;color:#A9C7F5;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
+  .home-hero h1{position:relative;font-size:33px;margin:0 0 12px;color:#fff;line-height:1.22;}
+  .home-hero p{position:relative;font-size:14.5px;color:#CFCFCF;max-width:60ch;margin:0;}
+  .hero-chips{position:relative;display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;}
+  .hero-chips span{font-size:12px;font-family:'JetBrains Mono';color:#D3E2FB;background:rgba(59,130,246,.16);border:1px solid rgba(59,130,246,.45);padding:4px 11px;border-radius:99px;}
+  .home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+  .home-card{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;transition:transform .12s, border-color .12s, box-shadow .12s;}
+  .home-card:hover{border-color:var(--ochre);transform:translateY(-2px);box-shadow:0 6px 18px rgba(29,78,216,.13);}
+  .home-card .ic{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:11px;background:var(--ochre-light);color:var(--ochre);font-size:21px;margin-bottom:12px;}
+  .home-card .tag{font-family:'JetBrains Mono';font-size:11px;background:var(--paper);padding:2px 7px;border-radius:5px;color:var(--ink-soft);}
+  .home-card h3{font-size:15.5px;margin:8px 0 4px;color:var(--ink);}
+  .home-card p{font-size:12.5px;color:var(--ink-soft);margin:0;}
+
+  .stitch{border-top:2px dashed var(--line-2);margin:26px 0;}
+  #installRow{display:none;margin:-8px 0 16px;}
+  body.can-install #installRow{display:block;}
+  .rings{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;margin:2px 0 16px;}
+  .ring{text-align:center;}
+  .ring .rl{font-size:12px;color:#D6CFC8;margin-top:2px;}
+  .ring .rs{font-size:11px;color:#9A9A9A;margin-top:1px;}
+  @keyframes rise{from{opacity:0;transform:translateY(9px);}to{opacity:1;transform:none;}}
+  .content>*{animation:rise .3s ease both;}
+  .content>*:nth-child(2){animation-delay:.04s;}
+  .content>*:nth-child(3){animation-delay:.08s;}
+  .content>*:nth-child(4){animation-delay:.12s;}
+  .prog{display:flex;align-items:center;gap:12px;margin:-4px 0 18px;}
+  .prog-track{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden;}
+  .prog-fill{height:100%;background:linear-gradient(90deg,#111111,var(--ochre));border-radius:3px;transition:width .25s ease;}
+  .prog-txt{font-family:'JetBrains Mono';font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+
+  @media (max-width:860px){
+    .app{flex-direction:column;}
+    .rail{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;height:auto;display:flex;padding:4px 6px calc(5px + env(safe-area-inset-bottom,0px));background:var(--ink);border-top:1px solid rgba(255,255,255,.18);box-shadow:0 -2px 10px rgba(0,0,0,.2);z-index:20;}
+    .rail-brand{display:none;}
+    #tabs{display:contents;}
+    .tab{
+      flex:1 1 0;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+      border-left:none;border-bottom:3px solid transparent;padding:5px 2px 3px;white-space:nowrap;
+    }
+    .tab.active{border-left:none;border-bottom-color:var(--ochre);background:rgba(255,255,255,.06);}
+    .tab .lbl{font-size:11px;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+    .tab .sub{display:none;}
+    .tab .tag{display:none;}
+    .tab .ic{font-size:21px;color:#9A9A9A;width:auto;}
+    .rail-foot{display:none;}
+    .content{padding:18px 14px calc(150px + env(safe-area-inset-bottom,0px));}
+    /* นิ้วใหญ่กว่าเมาส์: ช่องพิมพ์ 16px กัน Safari ซูมเองตอนโฟกัส, ปุ่มสูงอย่างน้อย 44px */
+    textarea,.txt{font-size:16px;}
+    .opt{padding:12px 14px;min-height:44px;}
+    .btn{min-height:44px;padding:12px 20px;}
+    .rubric button{width:40px;height:40px;}
+    .home-hero{padding:24px 20px 20px;}
+    .home-hero h1{font-size:24px;}
+    .section-head{gap:8px;margin:24px 0 10px;}
+    .section-head h2{font-size:17px;}
+    .stat-grid{grid-template-columns:1fr 1fr;gap:8px;}
+    .bar-row .lbl{width:88px;font-size:12px;}
+    table.plain{display:block;overflow-x:auto;font-size:12.5px;}
+    .prog{gap:8px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+.idpchip{font-family:'Sarabun';font-size:12px;padding:4px 10px;border-radius:99px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--ink-soft);}
+  .idpchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" id="rail">
+    <div class="rail-brand">
+      <div class="k">เล่มแม่ · The Parich</div>
+      <div class="s">ระบบประเมินคน → IDP</div>
+    </div>
+    <div id="tabs"></div>
+    <div class="rail-foot">แบบสอบถามพนักงานตอบเอง<br>ตอบแบบไม่ระบุตัวตน ไม่เก็บข้อมูล</div>
+  </nav>
+  <div class="main">
+    <div class="statusbar">
+      <span class="status" id="saveStatus" aria-live="polite"></span>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   DATA — ทุกคำถามจาก 6 ไฟล์ (118 ข้อ) ตามลำดับ 00 เล่มแม่ v2
+   ========================================================================= */
+
+const TABS = [
+  {id:'home', tag:'00', label:'หน้าแรก', short:'หน้าแรก'},
+  {id:'idp',  tag:'02', label:'เตรียมตัวก่อนคุย', short:'เตรียมตัว', sub:'เขียนสั้นๆ + ตัวเลือก'},
+  {id:'seamind', tag:'03', label:'บุคลิก & แรงจูงใจ', short:'บุคลิก', sub:'36 ข้อ'},
+  {id:'ikigai', tag:'04', label:'งานที่ใช่ (IKIGAI)', short:'งานที่ใช่', sub:'17 ข้อ'},
+  {id:'evp', tag:'08', label:'ทำไมถึงอยู่กับเรา', short:'ทำไมอยู่', sub:'แบบสำรวจสั้น · ไม่ระบุตัวตน'},
+  // 360 พักไว้รอบนี้ตามมติเจ้าของงาน 23 ก.ย. 2569 (โฟกัสให้พนักงานสะท้อนตัวเอง) — คืนได้โดยใส่บรรทัดนี้กลับ: {id:'f360', tag:'09', label:'มองจากเพื่อนร่วมงาน', short:'360°', sub:'ให้คะแนน + เขียน · 15 ข้อ'},
+  {id:'results', tag:'★', label:'สรุปผล', short:'สรุปผล'},
+];
+const ICONS = {home:'ti-home', idp:'ti-list-check', seamind:'ti-user-search', ikigai:'ti-target-arrow', evp:'ti-building', results:'ti-star'};
+
+/* ---- ไฟล์ 2 : IDP เตรียมตัวก่อนคุย ---- */
+const IDP_PREP = [
+  "งานที่ฉันรับผิดชอบหลักตอนนี้ (3-5 อย่าง)",
+  "งานที่ฉันทำแล้วรู้สึกภูมิใจ/ทำได้ดีที่สุด",
+  "งานที่ฉันทำแล้วรู้สึกฝืน / เหนื่อยใจ / ไม่ถนัด",
+  "อีก 1-2 ปี ฉันอยากทำงานแบบไหน / โตไปทางไหน",
+  "งานแบบไหนที่ทำแล้วฉัน \"ลืมเวลา\" / มีความสุข (ถนัด+ชอบ+มีคุณค่า)",
+  "มีอะไรนอกงานที่กระทบแผนของฉันไหม (เช่น เรียนต่อ, สอบ, ย้าย)",
+  "ถ้าให้รับงานที่ใหญ่/ยากขึ้นกว่านี้ ฉันคิดว่าฉันพร้อมรับเรื่องอะไร",
+  "ฉันอยากให้บริษัทช่วยสนับสนุนอะไร เพื่อให้ฉันโตได้",
+];
+const ROLE_TASKS = [{"k": "graphic_custom", "label": "กราฟิกสั่งทำ (custom/OEM)", "tasks": ["เปิดการ์ด Trello \"งานสั่งทำใหม่\" อ่านบรีฟลูกค้า", "หา asset/ลายอ้างอิง (Magnific/Pinterest/ChatGPT)", "วาดลายเวกเตอร์ใน Illustrator ตามแบบลูกค้า", "ทำ mockup เสื้อใน Photoshop (ลายน้ำ/ตารางไซส์/โลโก้)", "ส่งไฟล์ให้ลูกค้า/ทีมขายตรวจแบบ", "แก้ไขแบบตามคอมเมนต์จนกว่าจะผ่าน", "ขึ้นแพทเทิร์นตัวอย่าง พิมพ์ผ้าตัวอย่าง A3", "ลงทะเบียนรหัสลาย (EX###) ในชีตกลาง", "ประสานทีมขายเรื่องจุดพิมพ์/รายละเอียดออเดอร์", "ประสานฝ่ายผลิต (KPS/โกสุม) เรื่อง QA", "จัดเก็บไฟล์งานลง Google Drive", "อัปเดตสถานะการ์ด Trello"]}, {"k": "graphic_readymade", "label": "กราฟิกสำเร็จรูป/คอนเทนต์ (banner-วิดีโอ)", "tasks": ["รับการ์ดงาน banner/Reel จาก Trello", "ดึง asset/รูปสินค้าจาก Drive/คลัง vector", "สร้างภาพนายแบบด้วย AI (ChatGPT/Gemini)", "ออกแบบ banner/โปสเตอร์ใน Canva ตาม Brand Kit", "ตัดต่อ Reel/วิดีโอใน CapCut", "รีทัชภาพสินค้าจริงใน Photoshop (เปลี่ยนสีเสื้อ ฯลฯ)", "วาดไอคอน/มาสคอตใน Illustrator", "ลงทะเบียนรหัสลาย (FL###) ในชีตกลาง", "ส่งงานเข้า Trello รอตรวจจากการตลาด", "แก้ไขงานตามฟีดแบ็ก", "กำหนดช่องทาง/ADS channel ในการ์ด", "อัปโหลดไฟล์เสร็จเข้า Drive กลาง"]}, {"k": "graphic_pattern", "label": "R&D / ขึ้นแพทเทิร์น-Production graphic", "tasks": ["รับบรีฟงานออกแบบ/แก้ลายจาก Discord", "ขึ้นแพทเทิร์นเต็มไซส์รัน (24A–7XL) ต่อรหัสสินค้า", "ทำ mockup เสื้อ/ผ้าโพกหัวใน Photoshop", "ลงทะเบียนรหัสแพทเทิร์น (EX###)", "ประสานฝ่ายเย็บเรื่องขนาดจริงหลังเย็บ/เผื่อริมตะเข็บ", "จัดการไลบรารีคอเสื้อ/mockup/ลาย", "ทำ mood board อ้างอิงแฟชันจาก Pinterest", "ทำ concept sheet ออกแบบ (ChatGPT) สำหรับงานประกวด/คอลเลกชันใหม่", "บันทึกตารางงาน/เดดไลน์ใน Notion", "ประสานเรื่องตั๋วงาน/รหัสกับฝ่ายประสานงาน/บัญชี"]}, {"k": "sale_admin", "label": "แอดมินฝ่ายขาย (ปิดการขาย)", "tasks": ["ตอบแชทลูกค้าใน Pancake ทุกช่องทาง (ภายใน 5 นาที)", "สอบถามความต้องการลูกค้าก่อนเสนอราคา", "ตรวจสต็อกก่อนยืนยันขาย/เสนอสินค้าทดแทน", "เจรจาต่อรอง/พิจารณาส่วนลดตามเกณฑ์ (Decision Matrix)", "บรีฟงานกราฟิกสำหรับสินค้าสั่งทำ", "ติดตามงานออกแบบกับกราฟิกจนลูกค้าคอนเฟิร์ม", "สร้างคำสั่งซื้อใน Pancake + ทวนที่อยู่/ไซส์/ราคา", "ตรวจสลิป/ยืนยันการชำระเงิน", "ติด Tag ลูกค้าตามสถานะงาน", "แจ้งเลขพัสดุ/ติดตามจัดส่งจนถึงมือลูกค้า", "จัดการข้อร้องเรียน/เคลมสินค้า", "สังเกต/รายงานลิงก์มิจฉาชีพที่ทักเพจ", "ใช้ Trello ติดตามงานสั่งทำร่วมกับกราฟิก/ผลิต"]}, {"k": "marketing_content", "label": "Content Creator / วางแผนผลิตภัณฑ์", "tasks": ["วางแผนคอนเทนต์ตามปฏิทินเทศกาล/อีเวนต์", "คำนวณจำนวนสื่อที่ต้องผลิตจากเป้ายอดขาย", "สร้างการ์ด Trello บรีฟงานกราฟิกให้ครบ (แบรนด์/สินค้า/ขนาด/เดดไลน์)", "ตรวจงานกราฟิกเทียบบรีฟก่อนอนุมัติ", "เขียนแคปชั่นให้ตรงโทนแต่ละแบรนด์ (LOSO/FIN/SIXSAX)", "เตรียม asset/รูปจาก Drive จัดชุดโพสต์", "จัดชุดโพสต์ (แคปชั่น+ภาพ+รีวิว+คอมเมนต์)", "ตั้งเวลาโพสต์ผ่าน ERP + ใส่ auto-comment", "ตรวจโพสต์ที่ขึ้นเพจว่าถูกต้อง", "ส่งลิงก์โพสต์ต่อให้ฝ่ายโฆษณา (ชีต ADS)", "ประสานนางแบบ/ทีมถ่ายแบบงานเทศกาล", "ประสานทีมกราฟิกตั้งแต่บรีฟถึงแก้ไข", "รับข้อมูลราคา/โปรจากฝ่ายผลิตภัณฑ์"]}, {"k": "marketing_ads", "label": "ฝ่ายโฆษณา (ยิงแอด Facebook Ads)", "tasks": ["รับแผนแคมเปญจากทีม Content (วันที่/หมวดสินค้า/งบ)", "บันทึกรหัสโฆษณา/สถานะแคมเปญลง Excel", "ตั้งค่า Pancake Auto-reply และ Tag ลูกค้า", "ดึงยอดใช้งบจาก ERP กรอกลง Sheet ทุกเช้า", "ตรวจยอดคงเหลือบัตรเครดิตแต่ละใบ", "Reset วงเงินใช้จ่ายรายวันของแต่ละบัญชี", "เปิด Ads Manager ดูผล 7/14 วัน เทียบประสิทธิภาพ", "วิเคราะห์ต้นทุนต่อทัก/ต่อการซื้อ แล้วปรับงบ/ปิดแอด", "เทียบยอดขายจริง Pancake กับยอดใน Meta", "ตรวจยอดคำสั่งซื้อใน Meta Business Suite", "รายงานยอดตัดบัตรไม่สำเร็จ/ปัญหาบัตรให้หัวหน้า", "เช็ค QC Gate ก่อนยิงแคมเปญใหม่", "ให้ฟีดแบ็กแอดมินขายเมื่อทักเยอะแต่ปิดไม่ได้"]}, {"k": "marketing_marketplace", "label": "Marketplace/E-commerce Admin (Shopee ฯลฯ)", "tasks": ["เปิดร้านใหม่บน Marketplace + onboarding", "ยืนยันตัวตนร้าน/แนบเอกสาร VAT (ภ.พ.20)", "แก้ปัญหาเอกสารถูก reject (ประสานบัญชี)", "ตั้งค่าข้อมูลร้าน (ชื่อบริษัท/เลขภาษี/ที่อยู่)", "อัปโหลดสินค้า (รูป/ราคา/โปรโมชัน)", "ตรวจคำสั่งซื้อ/สถานะจัดส่ง/คำขอคืนสินค้า", "นำชุดคอนเทนต์/โปรไปลงแต่ละร้านตามแผน", "สลับโปรไฟล์เบราว์เซอร์ตามร้าน/บัญชี", "ประสานบัญชีเรื่องเอกสารจดทะเบียน", "ย่อ/ปรับขนาดรูปก่อนลงร้าน"]}, {"k": "factory_production", "label": "ฝ่ายผลิต/เย็บ (เบื้องต้น — ช่วยเพิ่มงานจริงได้)", "tasks": ["ตัดผ้าตามแพทเทิร์นจากกราฟิก", "เย็บเสื้อ/ชุดตามแบบและไซส์", "เผื่อริมตะเข็บตามมาตรฐาน", "ตรวจขนาดจริงหลังเย็บเทียบแพทเทิร์น + แจ้งกลับกราฟิก", "พิมพ์ลาย/สกรีนเสื้อตามไฟล์", "ตรวจคุณภาพงานพิมพ์ (ตำแหน่ง/สี/ความคม)", "แจ้งแก้ไขงานที่ไม่ผ่าน QA", "แพ็คสินค้าตามออเดอร์", "รายงานความคืบหน้า/ปัญหาการผลิต"]}, {"k": "accounting_finance", "label": "บัญชีและการเงิน (เบื้องต้น — ช่วยเพิ่มงานจริงได้)", "tasks": ["จัดทำเอกสารภาษี VAT/ภ.พ.20 ให้ทีมที่ต้องใช้", "เตรียมเอกสารยืนยันตัวตน (บัตร/ทะเบียนบริษัท)", "เปิด/จัดการสิทธิ์เข้าระบบ ERP", "จัดทำสรุปยอดค่าโฆษณา (Excel) ส่งฝ่ายโฆษณา", "อัปเดตชื่อ/รหัสบัญชีโฆษณาให้ตรงระบบบัญชี", "ดูแลบัญชีธนาคาร รับ-จ่ายเงิน", "จัดทำ P&L แยกตามแบรนด์", "ประสานฝ่ายต่างๆ เรื่องเอกสาร/สิทธิ์เข้าระบบ"]}, {"k": "hr_general", "label": "ทรัพยากรบุคคล/HR (เบื้องต้น — ช่วยเพิ่มงานจริงได้)", "tasks": ["คัดกรอง/สัมภาษณ์ผู้สมัคร", "จัดทำประกาศรับสมัครงาน", "ดูแล onboarding พนักงานใหม่", "จัดทำแบบประเมินผล/แผนพัฒนารายบุคคล (IDP)", "เก็บข้อมูล 360 Feedback", "ดูแลโครงสร้างองค์กร/สายบังคับบัญชา", "จัดการเรื่องร้องเรียน/ความสัมพันธ์พนักงาน", "ดูแลสวัสดิการ/ค่าตอบแทน"]}];
+const IDP_GROW = ["อยากเก่งขึ้นในสายงานเดิม จนเป็นผู้เชี่ยวชาญ","อยากขยับไปสายงานใหม่ เพิ่มทักษะข้ามสาย","อยากได้นำทีม หรือดูแลรับผิดชอบคนมากขึ้น","อยากได้ทำงานที่ท้าทาย ได้สร้างสิ่งใหม่","อยากได้งานที่มั่นคง สมดุลชีวิต ยังไม่อยากขยับตำแหน่ง","ยังไม่แน่ใจ ต้องดูสถานการณ์ไปก่อน","อื่นๆ (โปรดระบุ)"];
+const IDP_EXTERNAL = ["กำลังเรียนต่อ หรือเตรียมสอบ (เช่น สอบราชการ/สอบใบประกอบวิชาชีพ)","มีภาระหรือเรื่องครอบครัวที่ต้องดูแล","กำลังวางแผนย้ายที่อยู่หรือย้ายงาน","มีเรื่องสุขภาพที่ต้องดูแลเป็นพิเศษ","อยากเริ่มต้นธุรกิจหรือมีงานเสริมของตัวเอง","ไม่มีปัจจัยภายนอกที่กระทบแผนการทำงาน","อื่นๆ (โปรดระบุ)"];
+const IDP_READY = ["พร้อมรับงานที่ยากหรือซับซ้อนมากขึ้น","พร้อมดูแล/สอนงานให้กับน้องในทีม","พร้อมเป็นเจ้าของโปรเจกต์ด้วยตัวเอง","พร้อมตัดสินใจเองมากขึ้น โดยไม่ต้องรออนุมัติทุกเรื่อง","พร้อมทำงานข้ามฝ่าย/ประสานงานกับทีมอื่นมากขึ้น","ยังอยากโฟกัสงานปัจจุบันให้แน่นก่อน ยังไม่พร้อมรับเพิ่ม","อื่นๆ (โปรดระบุ)"];
+const IDP_SUPPORT = ["เวลา/โอกาสสำหรับเรียนรู้ในระหว่างเวลางาน","งบประมาณสำหรับคอร์สเรียนหรือฝึกอบรม","พี่เลี้ยงหรือโค้ชที่ช่วยให้คำแนะนำ","เครื่องมือ/อุปกรณ์ในการทำงานที่ดีขึ้น","โอกาสได้ลองทำงานที่ท้าทายมากขึ้น","ฟีดแบ็กและทิศทางที่ชัดเจนจากหัวหน้า","ลดภาระงานที่ไม่จำเป็นออกไปบ้าง","อื่นๆ (โปรดระบุ)"];
+
+
+/* ---- ไฟล์ 3 : SEAMIND ส่วน A (16 ข้อ, ให้คะแนน trait) ---- */
+const SM_A = [["เมื่อคุณเพิ่งเข้าร่วมทีมโปรเจกต์ใหม่ ซึ่งยังไม่รู้จักใครในทีมเลยแม้แต่คนเดียว ในวันแรกที่เริ่มงาน คุณมักจะทำอะไรเป็นอันดับแรก",[["เสนอตัวเป็นผู้ประสานงานและวางโครงสร้างงานก่อน",["social","tradition"]],["สังเกตบุคลิกทีมแต่ละคนก่อน แล้วค่อยหาจุดที่ตัวเองเหมาะ",["reflection","emotion"]],["เสนอไอเดียหรือวิธีใหม่ที่เคยเห็นมา",["innovation","action"]],["ถามว่าทีมเคยทำแบบนี้มาก่อนไหม มี template ไหม",["tradition","logic"]]]],["สมมติว่าคุณมีข้อเสนองาน 2 ทางเลือก คือ งาน A ให้เงินดีและมั่นคง แต่เป็นงานลักษณะเดิมซ้ำๆ กับงาน B ให้เงินน้อยกว่า แต่ได้เรียนรู้สิ่งใหม่และมีโอกาสก้าวหน้าสูงกว่า คุณจะตัดสินใจอย่างไร",[["ทำตารางเปรียบเทียบข้อดี-ข้อเสียก่อนตัดสินใจ",["logic"]],["ปรึกษาคนที่ไว้ใจ 3–4 คน แล้วฟังความเห็นรวม",["social","emotion"]],["ลองทำ B แบบ part-time ดูก่อน ถ้าใช่ค่อยเปลี่ยน",["action","innovation"]],["เลือก A เพราะมั่นคง สอดคล้องแผนชีวิตที่วางไว้",["tradition","reflection"]]]],["หากหัวหน้ามอบหมายให้คุณเรียนรู้เครื่องมือหรือระบบใหม่ให้เสร็จภายใน 2 สัปดาห์ คุณจะวางแผนจัดการอย่างไร",[["หาคู่มือ/คอร์สที่เป็นระบบที่สุด แล้วเรียนตามลำดับ",["tradition","logic"]],["เปิดใช้เลย เจอปัญหาค่อยแก้ไป",["action","innovation"]],["หาเพื่อน/กลุ่มที่ใช้อยู่ ขอให้ช่วยสอน",["social"]],["วางแผนก่อนว่าต้องรู้อะไรบ้าง แล้วค่อยหาแหล่งเรียน",["reflection","logic"]]]],["เหลือเวลาอีกเพียง 3 วันก่อนถึงกำหนดส่งงานสำคัญ แต่งานเสร็จไปเพียง 60% และคุณเจอปัญหาใหญ่ที่ยังแก้ไม่ตก คุณจะทำอย่างไรต่อ",[["ลุยแก้เองคนเดียวก่อน ให้สุดความสามารถ",["individual","action"]],["แจ้งหัวหน้าทันที เพื่อหาทางร่วมกัน",["social","emotion"]],["วางแผนใหม่ จัดลำดับ ทำเท่าที่ทำได้ให้ดีที่สุด",["reflection","logic"]],["เปลี่ยนไปลองแนวทางใหม่ที่อาจเวิร์กกว่า",["innovation"]]]],["หากคุณได้วันหยุดยาวติดต่อกัน 4 วันแบบไม่ได้วางแผนล่วงหน้า และไม่มีภาระอะไรต้องรับผิดชอบ คุณจะเลือกใช้เวลาอย่างไร",[["วางแผนทริปและหาข้อมูลที่ใหม่ที่ไม่เคยไป",["innovation","logic"]],["ชวนเพื่อนหรือครอบครัวทำกิจกรรมด้วยกัน",["social","emotion"]],["อยู่บ้าน อ่านหนังสือ หรือทำงานอดิเรกเงียบๆ คนเดียว",["individual","reflection"]],["พักก่อน แล้วเตรียมงาน/เรียนรู้สิ่งที่ช่วยงานได้",["tradition","logic"]]]],["หัวหน้าแจ้งว่างานชิ้นล่าสุดของคุณยังไม่ตรงจุด และขอให้ทำใหม่ทั้งหมด คุณจะมีปฏิกิริยาหรือจัดการอย่างไร",[["ขอนัดคุยให้ชัดว่า \"ตรงจุด\" หมายถึงอะไร",["logic","social"]],["เสียใจแป๊บหนึ่ง แต่กลับมาถามตัวเองว่าพลาดตรงไหน",["emotion","reflection"]],["ขอบคุณ feedback แล้วลงมือทำใหม่ทันที",["action","tradition"]],["รับฟัง แต่ก็อยากชี้แจงมุมมองของตัวเองด้วย",["individual","logic"]]]],["เมื่อสมาชิกในทีม 2 คนมีความเห็นไม่ตรงกันเรื่องแนวทางทำงาน และให้คุณเป็นคนช่วยตัดสิน คุณจะทำอย่างไร",[["ฟังทั้งสองฝ่ายให้จบก่อน แล้วค่อยหาข้อสรุปร่วม",["emotion","social"]],["ให้แต่ละคนลองไปหาทางออกเองก่อน",["individual"]],["ตัดสินจากข้อมูลที่มีทันที เพื่อให้งานเดินต่อ",["action","logic"]],["ขอข้อมูลประกอบเพิ่มก่อน แล้วค่อยตัดสิน",["reflection","logic"]]]],["เมื่อได้รับมอบหมายโปรเจกต์ใหม่ที่ยังไม่มีขอบเขตหรือรายละเอียดชัดเจน คุณจะเริ่มต้นทำอะไรก่อนเป็นอันดับแรก",[["กำหนดขอบเขต ไทม์ไลน์ และผลลัพธ์ที่ต้องส่งก่อนทำอะไร",["tradition","logic"]],["คุยกับผู้เกี่ยวข้องทุกคนเพื่อเข้าใจความคาดหวัง",["social","emotion"]],["เริ่มร่างตัวอย่างแรกเลย แล้วค่อยปรับ",["action","innovation"]],["ศึกษาโปรเจกต์คล้ายๆ ที่เคยทำหรือเคยเห็น",["tradition","reflection"]]]],["หลังจากสัปดาห์ที่งานหนักมาก ทั้งงานเยอะและมีประชุมถี่ต่อเนื่อง คุณมีวิธีฟื้นฟูพลังงานและดูแลตัวเองอย่างไร",[["ออกไปเจอเพื่อน พูดคุย ระบาย รับพลังจากคน",["social"]],["อยู่คนเดียว ไม่รับสาย ทำสิ่งที่ชอบเงียบๆ",["individual","reflection"]],["วิเคราะห์ว่าอะไรทำให้เครียด แล้ววางแผนป้องกัน",["logic","reflection"]],["ออกกำลังกาย/ทำกิจกรรม active ปลดปล่อยพลังงาน",["action"]]]],["หากคุณทำงานสำคัญผิดพลาดจนทำให้ทีมต้องกลับมาทำซ้ำ คุณจะจัดการกับสถานการณ์นั้นอย่างไร",[["บอกทีมทันที เพื่อช่วยกันแก้ให้เร็ว",["social","emotion"]],["วิเคราะห์ว่าเกิดอะไรขึ้น เพื่อไม่ให้พลาดซ้ำ",["logic","reflection"]],["ยอมรับผิดตรงๆ แล้วขอโทษทีม",["emotion","tradition"]],["ลงมือแก้ไขให้เห็นผลก่อน เป็นการแสดงความรับผิดชอบ",["action"]]]],["สภาพแวดล้อมการทำงานแบบไหนที่ทำให้คุณทำงานได้อย่างมีประสิทธิภาพที่สุด",[["มีโครงสร้างชัด รู้ว่าต้องทำอะไรเมื่อไหร่ มีระบบรองรับ",["tradition","logic"]],["มีทีมที่เข้าใจกัน คุยได้ตลอด ช่วยกันได้ทันที",["social","emotion"]],["มีอิสระเต็มที่ในการตัดสินใจและทดลองสิ่งใหม่",["innovation","individual"]],["เงียบ มีสมาธิ ไม่ถูกรบกวน คิดลึกได้",["reflection","individual"]]]],["เมื่อต้องมอบหมายงานสำคัญให้สมาชิกในทีมคนหนึ่งรับผิดชอบ คุณมีวิธีมอบหมายงานอย่างไร",[["อธิบายภาพรวมและผลลัพธ์ที่ต้องการ แล้วให้อิสระในการทำ",["innovation","logic"]],["เช็กว่าเขาเข้าใจงานและรู้สึกยังไงกับมัน ก่อนเริ่ม",["emotion","social"]],["ให้ขั้นตอนชัดเจน พร้อมจุดเช็กระหว่างทาง",["tradition","reflection"]],["บอกผลลัพธ์ที่ต้องการ แล้วให้เขาคิดวิธีเอง",["individual","action"]]]],["เมื่อเพื่อนร่วมงานขอให้คุณช่วยอธิบายเรื่องที่ซับซ้อนซึ่งเขายังไม่เข้าใจ คุณจะอธิบายอย่างไร",[["ถามก่อนว่าเขาเข้าใจพื้นฐานแค่ไหน แล้วค่อยเริ่ม",["logic","social"]],["ใช้ตัวอย่างหรือภาพประกอบให้เห็นง่าย",["innovation","emotion"]],["เช็กความเข้าใจเป็นระยะระหว่างอธิบาย",["reflection","emotion"]],["ปรับวิธีอธิบายไปเรื่อยๆ จนเห็นว่าเขาเข้าใจ",["emotion","innovation"]]]],["เมื่อโปรเจกต์เจอปัญหาที่ไม่เคยเกิดขึ้นมาก่อน ไม่มีคู่มือหรือแนวทางอ้างอิง และไม่มีใครในทีมเคยเจอมาก่อน คุณจะเริ่มต้นแก้ปัญหาอย่างไร",[["หาสาเหตุที่แท้จริงก่อน หาข้อมูลจนมั่นใจแล้วค่อยตัดสินใจ",["logic","reflection"]],["ระดมความคิดกับทีม ฟังทุกมุมก่อนหาทางออกร่วม",["social","emotion"]],["ลองวิธีที่น่าจะได้ผลเร็วที่สุดก่อน ไม่ใช่ค่อยปรับ",["action","innovation"]],["ถามผู้มีประสบการณ์ หรือหาตัวอย่างที่คล้ายกัน",["tradition","social"]]]],["เวลาที่ทีมทำกิจกรรมระดมความคิด (brainstorm) ร่วมกัน บทบาทแบบไหนที่คุณมักจะทำโดยธรรมชาติ",[["คนที่ตั้งคำถาม \"ทำไมต้องทำแบบเดิม?\" และเสนอมุมใหม่",["innovation"]],["คนที่ช่วยเชื่อมไอเดียทุกคนและหาจุดร่วม",["social","emotion"]],["คนที่ประเมินความเป็นไปได้ของแต่ละไอเดีย",["logic","reflection"]],["คนที่ดูว่าแนวไหน \"ทำได้จริง\" และเริ่มลงมือ",["action","tradition"]]]],["เมื่อมองไปอีก 5 ปีข้างหน้า คุณอยากอยู่ในบทบาทการทำงานลักษณะใดมากที่สุด",[["ผู้เชี่ยวชาญเฉพาะด้านที่คนมาขอคำแนะนำ",["individual","logic"]],["บริหารทีมและช่วยให้คนในทีมเติบโต",["social","emotion"]],["สร้างสิ่งใหม่หรือเปิดธุรกิจของตัวเอง",["innovation","action"]],["เป็นส่วนหนึ่งของทีมที่ดี มีระบบดี งานมีความหมาย",["tradition","social"]]]]];
+
+/* ---- ไฟล์ 3 : SEAMIND ส่วน B (12 ข้อ) ---- */
+const SM_B = [["เมื่อคุณต้องการคำแนะนำจากผู้ที่มีประสบการณ์มากกว่า คุณอยากให้เขาให้คำแนะนำกับคุณในลักษณะใด",["บอกตรงๆ ว่าควรทำอะไร พร้อมเหตุผลชัดเจน","ฟังสิ่งที่คุณรู้สึกก่อน แล้วค่อยแนะนำ","ตั้งคำถามให้คุณคิดหาคำตอบเองจนเจอทางออก","เล่าประสบการณ์ที่เขาเคยผ่านสถานการณ์คล้ายกัน"]],["การให้ฟีดแบ็ก (feedback) ในลักษณะใดที่ทำให้คุณนำไปพัฒนาตัวเองได้จริงมากที่สุด",["ตรงไปตรงมา บอกชัดว่าจุดไหนผิด ควรแก้ยังไง","เริ่มจากสิ่งที่ทำได้ดีก่อน แล้วค่อยแนะสิ่งที่ควรปรับ","ให้ตัวอย่างรูปธรรมว่าถ้าทำแบบนี้จะดีกว่ายังไง","ให้เวลาคิดก่อน ไม่กดดัน แล้วค่อยคุยกัน"]],["เมื่อคุณทำงานผิดพลาด คุณอยากให้เพื่อนร่วมงานพูดกับคุณด้วยประโยคแบบใด",["\"มาวิเคราะห์กันว่าเกิดอะไรขึ้น และจะแก้ยังไง\"","\"ไม่เป็นไร ทุกคนต้องเจอ ค่อยๆ ลุกขึ้นมา\"","\"ลองทำใหม่เลย ครั้งนี้เปลี่ยนวิธีนี้ดู\"","\"คุณคิดว่าตอนนั้นควรทำต่างออกไปยังไง?\""]],["เพื่อนร่วมงานที่คุณมักเลือกขอคำปรึกษาด้วย มักมีบุคลิกลักษณะแบบใด",["เป็นกันเอง คุยสบาย ไม่ต้องพิธีรีตอง","มืออาชีพ มีโครงสร้าง พูดชัด มีข้อมูลรองรับ","ผสมผสาน เป็นกันเองได้ แต่จริงจังเมื่อถึงเวลา","ให้เกียรติความเป็นส่วนตัว ไม่ก้าวก่ายเกินไป"]],["วิธีการเรียนรู้แบบใดที่ทำให้คุณพัฒนาตัวเองได้ดีที่สุด",["มีคนบรรยาย/สอน และได้ถาม-ได้ลองทำ","ลองทำเองก่อน โดยมีคนคอยแนะนำเป็นระยะ","อ่าน/ค้นเอง แล้วมีวงคุยหรือ feedback","มีกรอบให้ แต่มีอิสระในการทำเอง"]],["เมื่อคนที่คุณนับถือท้าทายความคิดของคุณอย่างตรงไปตรงมา คุณรู้สึกอย่างไร",["ตื่นเต้น ชอบ ถือเป็นโอกาสคิดใหม่","โอเค แต่ขอเวลาสักครู่ทบทวนก่อนตอบ","สบายใจถ้ามาพร้อมข้อมูลและเหตุผล","รับได้ถ้ายังรักษาความเคารพและความสัมพันธ์ที่ดี"]],["คุณอยากให้พี่เลี้ยงหรือหัวหน้าติดตามความคืบหน้างาน (check-in) บ่อยแค่ไหน",["ทุกวัน หรือทุกครั้งที่มีความคืบหน้า","รายสัปดาห์ มีโครงสร้าง วางแผนล่วงหน้า","ตามต้องการ ถ้าฉันต้องการจะขอเอง","รายเดือน หรือตามจุดสำคัญ ไม่ต้องถี่"]],["เพื่อนร่วมงานที่คุณทำงานด้วยแล้วเข้าขากันดี มักมีท่าทีต่อกฎระเบียบอย่างไร",["เคารพกฎ แต่รู้ว่าเมื่อไหร่ควรยืดหยุ่นเพื่อผลที่ดีกว่า","ยึดกฎเคร่งครัด เพราะช่วยให้ทีมคาดเดาได้","ชอบลองวิธีใหม่ กฎมีไว้ทดสอบว่ายังเหมาะไหม","ยืดหยุ่นตามสถานการณ์ ขอให้ทีมโอเคด้วยกัน"]],["อะไรที่ทำให้คุณรู้สึกมีแรงจูงใจในการทำงานได้ดีที่สุด",["บอกว่างานนี้สำคัญยังไง ผลลัพธ์จะไปถึงไหน","แสดงความเชื่อใจ และมอบความรับผิดชอบให้","อยู่ด้วยกัน ช่วยกันทำ ให้รู้สึกไม่ได้สู้คนเดียว","ชมตรงๆ เมื่อทำได้ดี ไม่ต้องเยินยอ"]],["เพื่อนร่วมงานลักษณะแบบใดที่คุณอยากขอคำปรึกษาด้วยมากที่สุด",["คนที่ให้คำแนะนำที่นำไปทำได้จริง","คนที่ฟังให้จบก่อนตัดสิน","คนที่ปรับคำแนะนำตามสถานการณ์ ไม่ซ้ำเดิม","คนที่ให้เวลาคิด ไม่เร่งให้ตัดสินใจเร็วเกินไป"]],["ประโยคใดใกล้เคียงกับแนวคิดในการทำงานของคุณมากที่สุด",["\"งานที่ดีต้องมีระบบ วัดได้ ทำซ้ำได้ด้วยคุณภาพเดิม\"","\"งานที่ดีต้องท้าทาย ถ้าไม่ได้เรียนรู้ ฉันก็ไม่มีแรง\"","\"งานที่ดีต้องมีความหมายต่อคนรอบข้าง ทำแล้วรู้สึกช่วยใครได้\"","\"งานที่ดีต้องทำให้ฉันเติบโต แม้ยากก็ยังอยากทำต่อ\""]],["เมื่อสถานการณ์งานเปลี่ยนแปลงกะทันหัน คุณอยากให้หัวหน้าทำอย่างไร",["อธิบายว่าทำไมถึงเปลี่ยน และเป้าหมายใหม่คืออะไร","ให้ฉันมีส่วนร่วมหาแนวทางใหม่ ไม่ใช่แค่สั่งให้ทำ","อยู่ด้วยกัน ให้กำลังใจ ช่วยคิดทางออกร่วมกัน","ให้เวลาปรับตัว อย่าเร่ง และมีโครงสร้างใหม่ที่ชัด"]]];
+// mentor-style scoring map: [question index(1-based), option index(0-based)] -> style
+const MENTOR_MAP = {
+  '1-0':'วิเคราะห์','1-2':'โค้ช','1-1':'สมดุล','1-3':'เครือข่าย',
+  '2-0':'วิเคราะห์','2-2':'วิเคราะห์','2-3':'สมดุล',
+  '3-0':'วิเคราะห์','3-1':'สมดุล','3-3':'โค้ช',
+  '6-0':'ไอเดีย',
+  '7-1':'เดดไลน์',
+  '8-2':'ไอเดีย',
+  '9-2':'เครือข่าย',
+  '10-2':'โค้ช','10-3':'สมดุล',
+  '11-0':'เดดไลน์','11-1':'ไอเดีย',
+  '12-3':'เดดไลน์',
+};
+const CADENCE_MAP = {0:'ทุกวัน / ทุกครั้งที่มีความคืบหน้า',1:'รายสัปดาห์ มีโครงสร้าง',2:'ตามต้องการ (ขอเอง)',3:'รายเดือน / ตาม milestone'};
+const MOTIV_MAP = { // key: q9-optIdx or q11-optIdx
+  '9-0':'Identified/Integrated (ความหมาย)', '11-2':'Identified/Integrated (ความหมาย)',
+  '9-1':'Intrinsic (อิสระ/เติบโต)', '11-1':'Intrinsic (อิสระ/เติบโต)', '11-3':'Intrinsic (อิสระ/เติบโต)',
+  '9-2':'Relatedness (ความสัมพันธ์)',
+  '9-3':'External (ผล/การยอมรับ)', '11-0':'External (ผล/การยอมรับ)',
+};
+
+/* ---- ไฟล์ 3 : SEAMIND ส่วน C (8 ข้อ) ---- */
+const SM_C1 = ["เก่งขึ้นในสายงานเดิม จนได้ตำแหน่งหรือค่าตอบแทนที่สูงขึ้น","ขยับไปทำงานสายใหม่ที่ต่างจากเดิม เพื่อเพิ่มทักษะและประสบการณ์","ได้เป็นผู้นำทีม หรือดูแลรับผิดชอบคนมากขึ้น","ได้ทำงานอิสระ หรือมีธุรกิจของตัวเองในอนาคต","งานมั่นคง สมดุลชีวิตดี มีความหมาย โดยไม่จำเป็นต้องเลื่อนตำแหน่ง","ยังไม่แน่ใจ ต้องดูสถานการณ์ไปก่อน","อื่นๆ (โปรดระบุ)"];
+const SM_C2 = ["รายได้และความมั่นคงในการทำงาน","การได้เรียนรู้และพัฒนาตัวเองอย่างต่อเนื่อง","ความหมายของงานและผลกระทบที่มีต่อผู้อื่น","อิสระและความยืดหยุ่นในการทำงาน","การเป็นผู้เชี่ยวชาญที่ได้รับการยอมรับ","ความสัมพันธ์ที่ดีกับเพื่อนร่วมงานและหัวหน้า","ความก้าวหน้า/โอกาสเลื่อนตำแหน่งในองค์กร","สมดุลระหว่างชีวิตส่วนตัวและการทำงาน","อื่นๆ (โปรดระบุ)"];
+const SM_C3 = ["เพราะรู้สึกสนุก ท้าทาย และได้เรียนรู้สิ่งใหม่อยู่เสมอ","เพราะสอดคล้องกับคุณค่าและเป้าหมายชีวิตของฉัน","เพราะเป็นทางเลือกที่ดีที่สุดสำหรับชีวิตในตอนนี้","เพราะต้องการรายได้และความมั่นคงที่ได้จากงานนี้","เพราะได้ทำงานกับทีม/หัวหน้าที่ดี บรรยากาศดี","เพราะสะดวก ใกล้บ้าน หรือเงื่อนไขอื่นเอื้อต่อชีวิต","ยังไม่แน่ใจ รู้สึกว่าต้องทำมากกว่าอยากทำ","อื่นๆ (โปรดระบุ)"];
+const SM_C4 = ["เทคนิค/ข้อมูล/เครื่องมือเฉพาะทางของงาน","ภาวะผู้นำ/การบริหาร/การวางกลยุทธ์","การสื่อสาร/การนำเสนอ/การโน้มน้าว","ความคิดสร้างสรรค์/ดีไซน์/การผลิตคอนเทนต์","การวิเคราะห์/การเงิน/การวางระบบ","การจัดการอารมณ์/มายด์เซ็ต/ความเป็นอยู่ที่ดี","ทักษะภาษาต่างประเทศ","ทักษะดิจิทัล/เทคโนโลยีใหม่ๆ","อื่นๆ (โปรดระบุ)"];
+const SM_C5 = ["น้อยกว่า 2 ชั่วโมง","2–5 ชั่วโมง","5–10 ชั่วโมง","มากกว่า 10 ชั่วโมง","อื่นๆ (โปรดระบุ)"];
+const SM_C6 = ["มีเวลาน้อย งบน้อย อยากได้ของฟรีที่เห็นผลเร็วที่สุด","มีเวลา แต่งบจำกัด โอเคกับของฟรีหรือราคาถูก","มีงบ แต่เวลาน้อย ยอมจ่ายถ้าได้ผลลัพธ์ที่รวดเร็วและชัดเจน","พร้อมทั้งเวลาและงบประมาณ อยากได้โปรแกรมที่ดีที่สุด","อื่นๆ (โปรดระบุ)"];
+const SM_C7 = ["ดูวิดีโอ/คลิปสั้น","อ่านเอกสาร/บทความ","ลงมือทำจริง/ฝึกฝนระหว่างทำงาน","เรียนสด/เข้าเวิร์กช็อปที่มีคนสอน","เรียนรู้จากเพื่อนร่วมงานหรือพี่เลี้ยงสอนงาน","อื่นๆ (โปรดระบุ)"];
+
+/* ---- ไฟล์ 4 : IKIGAI — Self : Ikigai-9 ---- */
+const IK9 = ["โดยทั่วไปแล้ว ฉันรู้สึกมีความสุขกับชีวิตอยู่บ่อยครั้ง","ฉันมักรู้สึกอยากเรียนรู้สิ่งใหม่ หรืออยากเริ่มต้นทำอะไรใหม่ๆ อยู่เสมอ","ฉันรู้สึกว่าตัวเองได้ทำประโยชน์ให้กับใครบางคนหรือส่วนรวมอยู่เสมอ","จิตใจของฉันมีพื้นที่ผ่อนคลาย ไม่รู้สึกอึดอัดหรือกดดันจนเกินไป","ฉันเป็นคนที่สนใจในหลากหลายเรื่องราวรอบตัว","ฉันรู้สึกว่ามีคนหรือมีบางสิ่งที่ต้องการการมีอยู่ของฉันจริงๆ","ชีวิตของฉันเต็มไปด้วยความรู้สึกอิ่มเอมและมีคุณค่าทางใจ","ฉันอยากพัฒนาตัวเองให้ดีขึ้นอยู่เสมอ","ฉันเชื่อว่าตัวเองมีผลดีต่อชีวิตของใครบางคน"];
+
+const IK_CIRCLES = [["love","รัก","งานที่คุณทำอยู่ในตอนนี้ มีส่วนที่ทำแล้วรู้สึก \"ลืมเวลา\" หรืออยากทำแม้ไม่ได้รับค่าตอบแทน มากน้อยเพียงใด"],["good","เก่ง","งานที่คุณทำอยู่ในตอนนี้ ได้ใช้ความสามารถที่คุณ \"ทำได้ดีกว่าคนอื่น หรือมีคนมักมาขอให้ช่วยเหลือ\" มากน้อยเพียงใด"],["world","โลกต้องการ","งานที่คุณทำอยู่ในตอนนี้ ช่วย \"แก้ปัญหาที่จำเป็นจริง หรือถ้าคุณหายไปทีมจะขาดสิ่งนี้ไป\" มากน้อยเพียงใด"],["paid","ได้เงิน","คุณรู้สึกว่าผลตอบแทนที่ได้รับ \"เป็นธรรมกับคุณค่าที่คุณสร้างให้กับงาน\" มากน้อยเพียงใด"]];
+const IK_3OF4 = {
+  world:'ขาด "โลกต้องการ" (มีรัก+เก่ง+ได้เงิน) → พอใจ แต่รู้สึก "ไร้ประโยชน์" — ควรหา impact/ความหมายให้งาน',
+  paid:'ขาด "ได้เงิน" (มีรัก+เก่ง+โลกต้องการ) → มีความสุข แต่ไม่มั่นคง — ควรต่อยอดให้สร้างรายได้ / re-scope',
+  good:'ขาด "เก่ง" (มีรัก+โลกต้องการ+ได้เงิน) → ตื่นเต้น แต่ไม่มั่นใจ (เสี่ยง burnout) — ควรเร่งพัฒนาทักษะ (70:20:10)',
+  love:'ขาด "รัก" (มีเก่ง+โลกต้องการ+ได้เงิน) → สบาย มั่นคง แต่ "ว่างเปล่า" — 🚩 ธงแดง retention (golden handcuffs) → job crafting ด่วน',
+};
+const IK1 = ["ยังเลือกทำงานนี้อย่างแน่นอน (เพราะรักและชอบจริงๆ)","อาจจะเลือก ขึ้นอยู่กับสถานการณ์","คงไม่เลือก เพราะทำเพราะเรื่องรายได้เป็นหลัก","ไม่แน่ใจ ยังตอบไม่ได้ชัดเจน","อื่นๆ (โปรดระบุ)"];
+const IK2 = ["ได้ใช้เต็มที่ ตรงกับความถนัดของฉันมาก","ได้ใช้บางส่วน ยังมีความถนัดอื่นที่ยังไม่ได้ใช้","แทบไม่ได้ใช้ความถนัดของฉันเลย","ไม่แน่ใจ ต้องคิดดูอีกที","อื่นๆ (โปรดระบุ)"];
+const IK4 = ["รู้สึกสบายดี มั่นคง แต่รู้สึกว่างเปล่า ไม่ค่อยมีไฟในการทำงาน (อาจขาดความรัก/ความชอบ)","รู้สึกสนุกและมีความหมาย แต่ไม่มั่นคงหรือรายได้ไม่เพียงพอ (อาจขาดผลตอบแทนที่เหมาะสม)","รู้สึกตื่นเต้นที่ได้ทำ แต่กังวลว่าจะทำได้ไม่ดีพอ (อาจขาดความถนัด/ความเชี่ยวชาญ)","รู้สึกว่าตัวเองเก่งและได้รับผลตอบแทนดี แต่ไม่แน่ใจว่าทำไปเพื่ออะไร (อาจขาดความหมาย/การเป็นที่ต้องการ)","รู้สึกครบทุกด้าน มีความสุขกับงานที่ทำอยู่ในตอนนี้","อื่นๆ (โปรดระบุ)"];
+
+const IK_INTERVIEWER = [
+  ['love','วง "รัก" (Love)',[
+    "เล่าวันทำงานที่ผ่านมาที่รู้สึกว่าเวลาผ่านไปเร็วมาก วันนั้นทำอะไรอยู่?",
+    "ช่วงนี้มีเรื่องงานอะไรที่คุณเอาไปเล่าต่อให้คนอื่นฟังโดยไม่มีใครถามบ้าง?",
+    "ถ้ามีเวลาว่างในงาน 1 ชั่วโมงแบบไม่มีงานสั่ง คุณจะเลือกไปทำอะไร?"],
+    "ตาเป็นประกาย/เสียงสูงขึ้นตอนเล่าเรื่องไหน · งานที่เขาเลือกทำเองโดยไม่ต้องบังคับ",
+    "เล่าเรื่องงานทุกอย่างด้วยน้ำเสียงเรียบ/ถอนหายใจ · นึกตัวอย่าง \"ลืมเวลา\" ไม่ออกเลย"],
+  ['good','วง "เก่ง" (Good at)',[
+    "ถ้าเพื่อนร่วมทีมต้องอธิบายว่าคุณเก่งเรื่องอะไร เขาจะพูดว่าอะไร?",
+    "เรื่องอะไรที่คนในทีมมักเดินมาถามคุณเป็นคนแรก?",
+    "งานชิ้นไหนที่คุณทำแล้วรู้สึกว่า 'อันนี้ง่ายสำหรับเรา แต่คนอื่นทำไม่ได้ง่ายขนาดนี้'?"],
+    "ทักษะที่คนอื่นยืนยัน (ไม่ใช่เขาเคลมเอง) · ความถนัดที่เขาพูดถึงแบบไม่ต้องคิดนาน",
+    "ตอบแต่สิ่งที่ \"อยากเก่ง\" ไม่ใช่ \"เก่งจริง\" · ไม่มีตัวอย่างที่คนอื่นมาขอความช่วยเหลือ"],
+  ['world','วง "โลกต้องการ" (World needs)',[
+    "สมมติพรุ่งนี้ตำแหน่งคุณหายไปเลย ทีมจะขาดอะไรที่ไม่มีใครแทนได้?",
+    "มีปัญหาอะไรในทีม/บริษัทที่คุณเห็นแล้วรู้สึก 'อยากลุกไปแก้' เป็นพิเศษ?",
+    "งานที่คุณทำอยู่ ส่งผลถึงใครบ้าง แล้วเขาได้อะไรจากมัน?"],
+    "เขาเชื่อมงานตัวเองกับ impact/คนอื่นได้ชัดไหม · มีเรื่องที่เขา \"อิน\" อยากแก้",
+    "ตอบได้แต่ \"ทำตามสั่ง\" เชื่อมกับคุณค่า/คนอื่นไม่ได้"],
+  ['paid','วง "ได้เงิน" (Paid for)',[
+    "ถ้าคุณจะออกไปทำอาชีพเสริมวันนี้ด้วยทักษะที่มีอยู่ คุณจะทำอะไร?",
+    "ทักษะไหนของคุณที่คุณคิดว่าที่อื่นก็อยากได้ / ตลาดต้องการ?",
+    "คุณรู้สึกว่าสิ่งที่คุณทุ่มให้งาน กับสิ่งที่ได้กลับมา มันสมดุลกันแค่ไหน?"],
+    "เขาเห็นมูลค่าทักษะตัวเองในตลาดไหม · สัญญาณความ (ไม่) พอใจเรื่องผลตอบแทน",
+    "รู้สึกว่าทุ่มเยอะแต่ได้กลับน้อยมาก · หรือประเมินมูลค่าตัวเองต่ำเกินจริง"],
+];
+const IK_CROSS_Q = [
+  "ถ้าให้เลือกได้ใหม่โดยเงินเท่าเดิม คุณจะยังเลือกงานลักษณะนี้ไหม? (แยก รัก ออกจาก ได้เงิน)",
+  "อะไรที่ทำให้คุณยังอยู่ที่นี่? (ฟังว่าเป็น 'รัก/ความหมาย' หรือแค่ 'เงิน/ความมั่นคง' → จับ golden handcuffs)",
+  "ใน 1 ปีข้างหน้า ถ้าจะให้ทำงานนี้อย่างมีความสุขขึ้น ต้องเปลี่ยนอะไร 1 อย่าง? (ชี้วงที่ขาดตรงๆ)",
+];
+
+/* ---- ไฟล์ 5 : A/B/C โหมดผู้สัมภาษณ์ (ตะล่อม) ---- */
+const ABC_A = [
+  ["คู่ 1 · logic ↔ emotion","เล่าการตัดสินใจเรื่องงานครั้งใหญ่ล่าสุดให้ฟังหน่อย — ตอนนั้นคุณชั่งใจจากอะไรบ้าง?","emotion","logic",
+   "logic: พูดถึงข้อมูล ตัวเลข ข้อดี-ข้อเสีย เหตุผล · emotion: พูดถึงความรู้สึก คน ผลกระทบต่อทีม สัญชาตญาณ"],
+  ["คู่ 2 · action ↔ reflection","เวลาได้งานใหม่ที่ยังไม่เคยทำ ชั่วโมงแรกคุณทำอะไร?","reflection","action",
+   "action: เปิดลองเลย/เริ่มร่าง/ลุย · reflection: วางแผน หาข้อมูล คิดให้ครบก่อน"],
+  ["คู่ 3 · tradition ↔ innovation","เล่าตอนที่วิธีเดิม/กฎที่มีอยู่ มันใช้กับสถานการณ์ตรงหน้าไม่ได้ คุณทำยังไง?","tradition","innovation",
+   "tradition: หาวิธีทำให้เข้ากับระบบ/ขออนุมัติ/ยึดมาตรฐาน · innovation: คิดวิธีใหม่ ลองนอกกรอบ ตั้งคำถามกับกฎ"],
+  ["คู่ 4 · social ↔ individual","งานที่คุณภูมิใจที่สุดช่วงนี้ทำคนเดียวหรือกับทีม? แล้วเวลาหมดพลังจากงาน คุณชาร์จยังไง?","individual","social",
+   "social: ได้พลังจากคน/ทีม/คุย · individual: ชาร์จด้วยการอยู่คนเดียว/ทำเงียบๆ ชอบงานที่คุมเอง"],
+];
+const ABC_B_Q = [
+  "เล่า 2 เรื่อง — ครั้งที่มีคนติงงานคุณแล้วมันช่วยให้ดีขึ้นจริง กับครั้งที่มีคนติงแล้วคุณรับไม่ค่อยได้ — สองครั้งนั้นต่างกันตรงไหน?",
+  "เวลาติดปัญหางาน ปกติคุณเดินไปหาใคร? อะไรที่ทำให้เลือกคนนั้น?",
+  "ถ้าได้พี่เลี้ยงในฝัน คุณอยากให้เขาตามงาน/เช็กอินบ่อยแค่ไหน?",
+  "งานแบบไหนที่คุณทุ่มสุดตัวโดยไม่มีใครต้องบังคับ? แล้วอะไรทำให้คุณยังอยู่ที่นี่?",
+];
+const ABC_C_Q = [
+  "สมมติทุกงานให้เงินเท่ากันหมด คุณจะเลือกทำงานแบบไหน? เพราะอะไร?",
+  "อีก 1–3 ปี อยากไปถึงไหน? → (laddering) แล้วสิ่งนั้นสำคัญกับคุณยังไง? ถามซ้ำ 2-3 ชั้น",
+  "ช่วงนี้ตื่นมาทำงานด้วยความรู้สึกแบบไหนเป็นส่วนใหญ่?",
+  "ถ้าจะพัฒนาสักเรื่อง คุณพอมีเวลา/แรงลงทุนกับมันแค่ไหนในชีวิตช่วงนี้? มีอะไรนอกงานที่กระทบไหม?",
+];
+
+/* ---- ไฟล์ 8 : EVP & Stay Interview ---- */
+const EVP_PILLARS = [["rewards","ค่าตอบแทน & ความมั่นคง"],["opportunity","โอกาสเติบโต & การเรียนรู้"],["org","องค์กร & ลักษณะงาน"],["people","เพื่อนร่วมงาน & หัวหน้า"],["worklife","ชีวิตส่วนตัว & ความยืดหยุ่นในการทำงาน"]];
+const EVP_REASONS = ["เงินเดือน/สวัสดิการอยู่ในเกณฑ์ที่พอใจ","งานมีความมั่นคง ไม่ต้องกังวลเรื่องอนาคต","ได้เรียนรู้สิ่งใหม่และพัฒนาตัวเองอยู่เสมอ","เห็นเส้นทางเติบโตและโอกาสก้าวหน้าในองค์กร","รู้สึกภูมิใจในแบรนด์/งานที่ทำ","งานมีความท้าทายและสนุกกับสิ่งที่ทำ","หัวหน้าดูแลดี ให้คำแนะนำและสนับสนุน","เพื่อนร่วมงานดี บรรยากาศการทำงานดี","เวลาทำงานยืดหยุ่น สมดุลกับชีวิตส่วนตัว","ที่ทำงานอยู่ใกล้บ้าน หรือเดินทางสะดวก","มีความผูกพันกับเพื่อนร่วมงาน/องค์กร ไม่อยากเริ่มต้นใหม่ที่อื่น","อื่นๆ (โปรดระบุ)"];
+const EVP_S4 = ["ตั้งใจจะทำงานที่นี่ต่อไปอย่างแน่นอน","น่าจะทำงานที่นี่ต่อไป","ยังไม่แน่ใจ ขอดูสถานการณ์ก่อน","เริ่มมองหางานหรือโอกาสอื่นบ้างแล้ว","ตั้งใจจะลาออกในเร็วๆ นี้"];
+
+const STAY_Q = [
+  ["วันแบบไหนที่ตื่นมาแล้วรู้สึกอยากมาทำงาน? อะไรทำให้รู้สึกงั้น?","งานประเภทไหนทำให้เขา \"มีไฟ\" (จุดแข็ง+สิ่งที่ควรให้เขาได้ทำมากขึ้น)","นึกไม่ออกเลย / \"ก็มาเพราะต้องมา\" = สัญญาณ disengage"],
+  ["ช่วงนี้ได้เรียนรู้หรือรู้สึกว่าตัวเองโตขึ้นเรื่องอะไรบ้าง? (เสา2)","ยังรู้สึกได้พัฒนาไหม → ป้อน IDP 70:20:10 ตรงๆ","\"ไม่ได้เรียนอะไรใหม่มานานแล้ว\" = รูรั่วเสา Opportunity"],
+  ["อะไรที่ทำให้คุณยัง \"เลือก\" อยู่ที่นี่? (อย่าถามตรง \"ทำไมไม่ลาออก\")","คำที่เขาพูดออกมาเอง = EVP ตัวจริง (จดเป๊ะ) → จับเข้า 5 เสา","พูดได้แค่เรื่องเดียว/เรื่องเงินอย่างเดียว = ยึดจุดเดียว เปราะ"],
+  ["ครั้งล่าสุดที่แว่บคิด \"อยากไปที่อื่น\" คือเมื่อไหร่ อะไรจุดชนวน?","ตัวจุดชนวน = รูรั่วจริง (งานเยอะ, ไม่ถูกมองเห็น, ทะเลาะกับใคร)","มีเหตุการณ์ชัด + ยังค้างคาใจ = เสี่ยงสูง ต้องตามอุด"],
+  ["อะไรจะทำให้ \"งานนี้ดีขึ้น\" สำหรับคุณ?","คำขอที่ทำได้จริง (quick win) vs โครงสร้าง → คัดมาทำ 1-2 อย่างจริง","ไม่มีข้อเสนอเลย / กว้างลอยมาก"],
+  ["มีความสามารถหรืออยากทำอะไร ที่ตอนนี้ยังไม่ได้ใช้/ไม่ได้ทำที่นี่บ้าง?","talent ที่ถูกฝัง → job crafting / งาน 70% ใน IDP","สิ่งที่อยากทำ \"ต้องออกไปทำเท่านั้น\" = ธงจริง ต่างจาก \"ทำในองค์กรก็ได้\""],
+  ["สมมติมีที่อื่นมาชวน — เขาต้องเสนออะไร ถึงจะทำให้คุณคิดหนักจริงๆ?","สิ่งนั้น = จุดที่เราอ่อนที่สุด (เงิน? ตำแหน่ง? ความยืดหยุ่น?)","เลี่ยงตอบ / ตอบไม่ได้เลย (อาจตัดสินใจไปแล้ว)"],
+  ["มีอะไรที่ผม/พี่ (หัวหน้า) ทำได้ เพื่อให้คุณทำงานที่นี่มีความสุขขึ้น?","ปิดด้วยการให้เขา \"ขอ\" → ต้องมี follow-up จริงหลังจากนี้","ไม่กล้าขอ/ยอมแพ้แล้ว"],
+];
+
+/* ---- ไฟล์ 9 : 360 Feedback ---- */
+const F360_DIMS = [["d1","คุณภาพสิ่งที่ส่งมอบ",["สิ่งที่เขาส่งมาให้ฉัน (บรีฟ/สเปก/ไฟล์งาน) มีความครบถ้วน ไม่ต้องตามสอบถามข้อมูลเพิ่มเติมบ่อยครั้ง","ข้อมูลที่เขาสื่อสารมีความชัดเจน เข้าใจตรงกัน สามารถนำไปทำงานต่อได้ทันที"]],["d2","การสื่อสาร & ตอบกลับ",["เขาตอบกลับข้อความ/อีเมลอย่างรวดเร็ว ไม่ปล่อยให้ค้างเป็นเวลานาน","เขาสื่อสารผ่านช่องทางที่ตกลงกันไว้ ไม่สื่อสารกระจัดกระจายหลายช่องทางจนตามยาก","เมื่อมีปัญหาหรืองานล่าช้า เขาแจ้งให้ทราบล่วงหน้า ไม่ปล่อยให้เงียบหายไป"]],["d3","ความตรงเวลา / ไม่ดองงาน",["เขาส่งงานหรืออนุมัติงานตามเวลาที่รับปากไว้","เขาไม่ทำให้งานของฉันติดค้าง เนื่องจากต้องรอการตอบกลับหรือดำเนินการจากเขา"]],["d4","ความร่วมมือ & เปิดรับ feedback",["เขาเปิดรับฟังฟีดแบ็กด้วยใจที่เป็นกลาง ไม่ตั้งกำแพงหรือมีท่าทีต่อต้าน","เมื่อเกิดปัญหาในงาน เขาช่วยกันแก้ไขร่วมกัน ไม่โยนความผิดหรือโทษผู้อื่น"]],["d5","คุณภาพการแก้ไข",["เมื่อต้องแก้ไขงาน เขาแก้ไขให้ตรงตามที่ตกลงกันไว้ ไม่ต้องแก้ไขวนซ้ำหลายรอบ"]],["d6","ความน่าเชื่อถือ",["เมื่อเขารับปากเรื่องใดไว้ เขาทำได้จริงตามที่รับปาก เป็นคนที่ไว้ใจได้"]]];
+const F360_ROLES = ['ต้นน้ำ — ฉันเป็นคนส่งงานให้เขา','ปลายน้ำ — เขาเป็นคนส่งงานให้ฉัน','เพื่อนร่วมงานทั่วไป (ทำงานร่วมกัน)','ตัวเอง (ประเมินตนเอง)'];
+const IK3_OPTS = ["ส่งผลมาก ถ้าฉันหายไปทีมจะขาดสิ่งนี้ไปจริงๆ","ส่งผลบางส่วน มีคนอื่นทำแทนได้บ้าง","แทบไม่ส่งผลชัดเจน ใครทำก็ได้เหมือนกัน","ไม่แน่ใจ ยังไม่เคยคิดเรื่องนี้ชัดเจน","อื่นๆ (โปรดระบุ)"];
+const EVP_NEARQUIT = ["งานหนักเกินไป จนรู้สึกเหนื่อยล้า","รู้สึกว่าค่าตอบแทน/สวัสดิการไม่เหมาะสมกับสิ่งที่ทำ","ไม่เห็นเส้นทางความก้าวหน้าในสายงาน","ไม่ได้รับการยอมรับ หรือผลงานไม่ถูกมองเห็น","มีปัญหากับหัวหน้า/วิธีการบริหารจัดการ","มีความขัดแย้งกับเพื่อนร่วมงาน","รู้สึกว่างานไม่มีความหมายหรือไม่ตรงกับสิ่งที่ถนัด","อยากเปลี่ยนสายงาน/ลองทำสิ่งใหม่","มีเหตุผลส่วนตัว เช่น ครอบครัว สุขภาพ หรือย้ายที่อยู่","ได้รับข้อเสนองานอื่นที่ดีกว่า","ไม่เคยคิดอยากลาออกเลยในช่วงที่ผ่านมา","อื่นๆ (โปรดระบุ)"];
+const EVP_CHANGE = ["เพิ่มค่าตอบแทน/สวัสดิการ","ปรับปริมาณงานให้เหมาะสมมากขึ้น","เพิ่มโอกาสเรียนรู้และพัฒนาทักษะ","สร้างเส้นทางความก้าวหน้าที่ชัดเจนขึ้น","ปรับปรุงการสื่อสาร/การบริหารจัดการของหัวหน้า","เพิ่มความยืดหยุ่นของเวลา/สถานที่ทำงาน","ปรับปรุงบรรยากาศและความสัมพันธ์ในทีม","ให้การยอมรับ/ชื่นชมผลงานมากขึ้น","ปรับปรุงเครื่องมือ/อุปกรณ์ในการทำงาน","ไม่มีอะไรอยากเปลี่ยน พอใจกับปัจจุบันแล้ว","อื่นๆ (โปรดระบุ)"];
+const F360_CONTINUE = ["ตอบกลับข้อความ/ประสานงานรวดเร็ว","ส่งงาน/บรีฟที่ครบถ้วน ชัดเจน","ตรงต่อเวลาตามที่รับปากไว้เสมอ","เปิดรับฟังฟีดแบ็กและปรับปรุงตัวเอง","ช่วยเหลือเพื่อนร่วมงานเมื่อมีปัญหา","รักษาคุณภาพงานให้สม่ำเสมอ","สื่อสารอย่างตรงไปตรงมาและสุภาพ","แจ้งล่วงหน้าเมื่อมีปัญหาหรือความล่าช้า","อื่นๆ (โปรดระบุ)"];
+const F360_STOP = ["ปล่อยข้อความ/งานค้างไว้นานเกินไป","ส่งบรีฟ/ข้อมูลที่ไม่ครบถ้วน ทำให้ต้องถามซ้ำ","แก้ไขงานไม่ตรงตามที่ตกลง ต้องแก้วนหลายรอบ","ผิดนัด/ส่งงานล่าช้ากว่าที่รับปาก","สื่อสารหลายช่องทางจนตามงานยาก","โยนงาน/โทษผู้อื่นเมื่อเกิดปัญหา","ไม่แจ้งล่วงหน้าเมื่อมีปัญหาหรือความล่าช้า","ปิดกั้นไม่เปิดรับฟังฟีดแบ็ก","ไม่มีสิ่งที่ควรเลิก/ลด","อื่นๆ (โปรดระบุ)"];
+const F360_START = ["สรุปงาน/บรีฟให้ชัดเจนและครบถ้วนตั้งแต่ต้น","แจ้งความคืบหน้าของงานเป็นระยะ","ใช้ช่องทางสื่อสารกลางที่ตกลงร่วมกัน","ให้ฟีดแบ็กที่ตรงไปตรงมามากขึ้น","วางแผนเวลาล่วงหน้าเพื่อลดความล่าช้า","ช่วยตรวจสอบงานร่วมกันก่อนส่งต่อ","สอบถามความเห็น/ความต้องการก่อนเริ่มงาน","ไม่มีสิ่งที่อยากให้เริ่มทำเพิ่มเติม","อื่นๆ (โปรดระบุ)"];
+const F360_EVENT = ["ช่วยแก้ปัญหาเร่งด่วนให้ฉันได้ทันเวลา","ส่งมอบงาน/ข้อมูลที่ครบถ้วนจนทำงานต่อได้ทันที","รับผิดชอบและแก้ไขเมื่อเกิดข้อผิดพลาด","สื่อสารแจ้งปัญหาล่วงหน้าจนวางแผนรับมือได้ทัน","ให้คำแนะนำ/ฟีดแบ็กที่เป็นประโยชน์ต่องานของฉัน","ประสานงานข้ามทีมจนงานราบรื่น","ยังนึกเหตุการณ์เฉพาะเจาะจงไม่ออก","อื่นๆ (โปรดระบุ)"];
+const F360_UPSTREAM = ["เขารับบรีฟ/งานที่ฉันส่งไปอย่างตั้งใจ อ่านรายละเอียดให้ครบก่อนเริ่มทำ", "เมื่อบรีฟยังไม่ชัดเจน เขาสอบถามกลับทันที ไม่เดาเองแล้วทำผิด", "เขาตอบรับหรือยืนยันเมื่อได้รับงานแล้ว ไม่ปล่อยเงียบ", "เขาส่งงานกลับมาให้ฉันตามเวลาที่ตกลงกันไว้", "เขาเปิดรับฟีดแบ็กและการแก้ไขด้วยใจที่เป็นกลาง ไม่ตั้งกำแพง", "เมื่อมีปัญหาหรือความล่าช้า เขาแจ้งกลับมาหาฉันล่วงหน้า", "เมื่อเกิดปัญหา เขาไม่โยนความผิด หรือโทษว่าเป็นเพราะบรีฟของฉัน", "เขาแก้ไขงานให้ตรงตามที่ตกลงกันไว้ ไม่ต้องแก้วนซ้ำหลายรอบ", "เมื่อเขารับปากเรื่องใดไว้ เขาทำได้จริง เป็นคนที่ไว้ใจได้", "เขาสื่อสารกับฉันอย่างสุภาพและเป็นมืออาชีพ"];
+const F360_SELF = ["ฉันส่งงาน/บรีฟให้เพื่อนร่วมงานอย่างครบถ้วนและชัดเจน", "ฉันตอบกลับข้อความและประสานงานอย่างรวดเร็ว ไม่ปล่อยให้ค้าง", "ฉันส่งงานหรืออนุมัติงานตรงตามเวลาที่รับปากไว้", "ฉันเปิดรับฟีดแบ็กและปรับปรุงงานตามที่ตกลงกันไว้", "เมื่อมีปัญหาหรือความล่าช้า ฉันแจ้งให้ผู้ที่เกี่ยวข้องทราบล่วงหน้า", "เมื่อเกิดปัญหา ฉันช่วยกันแก้ไข ไม่โยนความผิดให้ผู้อื่น", "ฉันแก้ไขงานให้ตรงตามที่ตกลง ไม่ต้องแก้วนซ้ำหลายรอบ", "เมื่อฉันรับปากเรื่องใดไว้ ฉันทำได้จริงตามที่รับปาก"];
+
+/* ==== STORAGE LAYER (localStorage + Supabase append-only) — replaces window.storage ==== */
+let state = { tab:'home', resStep:0, resTotal:1, cache:{} };
+
+// เปิด backend จริง: ใส่ค่าจาก Supabase (Settings → API) + รัน SQL schema (ตาราง submissions)
+const BACKEND = { url:"", anonKey:"" };
+
+function setStatus(msg, warn){
+  const el = document.getElementById('saveStatus');
+  if(!el) return;
+  el.textContent = msg||'';
+  el.className = 'status'+(warn?' warn':'');
+}
+function sessionId(){
+  let s = localStorage.getItem('pp:__sid');
+  if(!s){ s = 's-'+Math.random().toString(36).slice(2)+'-'+Date.now().toString(36); localStorage.setItem('pp:__sid', s); }
+  return s;
+}
+function cloudInsert(skey, value){
+  if(!BACKEND.url || !BACKEND.anonKey) return; // ยังไม่เชื่อม = เก็บในเครื่องอย่างเดียว
+  fetch(BACKEND.url.replace(/\/+$/,'')+'/rest/v1/submissions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':BACKEND.anonKey,'Authorization':'Bearer '+BACKEND.anonKey,'Prefer':'return=minimal'},
+    body: JSON.stringify({ session_id: sessionId(), skey: skey, payload: value })
+  }).catch(()=>{}); // fire-and-forget; ไม่บล็อก UI, ล้มเงียบถ้าออฟไลน์
+}
+async function storeSet(key, value){
+  try{
+    localStorage.setItem(key, JSON.stringify(value));
+    setStatus('บันทึกแล้ว ✓');
+    cloudInsert(key.replace(/^pp:/,''), value);
+  }catch(e){ setStatus('บันทึกไม่สำเร็จ', true); console.error(e); }
+}
+async function storeGet(key){
+  try{ const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; }
+  catch(e){ return null; }
+}
+async function storeDelete(key){ try{ localStorage.removeItem(key); }catch(e){} }
+async function storeListPrefix(prefix){
+  try{ const out=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.indexOf(prefix)===0 && k!=='pp:__sid') out.push(k);} return out; }
+  catch(e){ return []; }
+}
+function pkey(suffix){ return `pp:${suffix}`; }
+
+/* ตอบแบบไม่ระบุตัวตนทั้งหมด — ไม่มีการเก็บชื่อผู้ตอบ (มติเจ้าของงาน 23 ก.ย. 2569) */
+function escName(n){ return String(n||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+/* =========================================================================
+   RENDER — SHELL
+   ========================================================================= */
+function renderTabs(){
+  const el = document.getElementById('tabs');
+  const narrow = window.matchMedia('(max-width:860px)').matches;
+  el.innerHTML = '';
+  TABS.forEach(t=>{
+    const d = document.createElement('div');
+    d.className = 'tab'+(state.tab===t.id?' active':'');
+    d.innerHTML = `<i class="ti ${ICONS[t.id]||'ti-circle'} ic"></i><span class="tag">${t.tag}</span><span><span class="lbl">${narrow && t.short ? t.short : t.label}</span>${t.sub?`<span class="sub">${t.sub}</span>`:''}</span>`;
+    d.onclick = ()=>{ state.tab=t.id; state.resStep=0; history.pushState(null,'','#'+t.id); renderTabs(); renderContent(); window.scrollTo(0,0); };
+    el.appendChild(d);
+  });
+}
+window.matchMedia('(max-width:860px)').addEventListener('change', ()=>{ renderTabs(); });
+
+/* =========================================================================
+   HOME
+   ========================================================================= */
+function renderHome(){
+  const html = `
+  <div class="home-hero">
+    <div class="eyebrow">ระบบดูแลและพัฒนาคน · The Parich</div>
+    <h1>รู้จักคนของเราให้ลึกขึ้น</h1>
+    <p>เครื่องมือช่วยทำความเข้าใจพนักงานแต่ละคน ว่าเขาถนัดอะไร อยากโตไปทางไหน และอะไรที่ทำให้เขาอยากอยู่กับเราต่อ เป็นแบบสอบถามที่พนักงานตอบเอง เลือกคำตอบและให้คะแนน ใช้เวลาไม่นาน</p>
+    <div class="hero-chips"><span>ไม่ระบุตัวตน ไม่เก็บข้อมูล</span><span>บันทึกอัตโนมัติ</span><span>ทำค้างไว้ทำต่อได้</span><span>ตอบจบเห็นผลสรุปทันที</span></div>
+  </div>
+  <div class="home-grid">
+    ${TABS.filter(t=>t.id!=='home'&&t.id!=='results').map(t=>`
+      <div class="home-card" onclick="window.__goto('${t.id}')">
+        <span class="ic"><i class="ti ${ICONS[t.id]||'ti-forms'}"></i></span>
+        <h3>${t.label}</h3>
+        <p>${t.sub||''}</p>
+      </div>`).join('')}
+    <div class="home-card" onclick="window.__goto('results')" style="border-color:var(--line);">
+      <span class="ic"><i class="ti ${ICONS.results}"></i></span>
+      <h3>สรุปผล</h3>
+      <p>ดูภาพรวมของรหัสที่เลือกไว้ ครบทุกเครื่องมือ</p>
+    </div>
+  </div>
+  <div class="stitch"></div>
+  <div class="banner info"><i class="ti ti-info-circle" style="font-size:16px;"></i> <span>เลือกทำทีละแท็บได้เลย ตอบแล้วระบบบันทึกให้อัตโนมัติทันที ไม่ต้องกดบันทึก ทำค้างไว้แล้วกลับมาทำต่อได้ ตอบจบแต่ละชุดกด "ถัดไป" ด้านล่างได้เลย ตอบแบบไม่ระบุตัวตน ไม่เก็บข้อมูล</span></div>
+  <div id="installRow"><button class="btn ghost" onclick="window.__installApp()"><i class="ti ti-device-mobile-down" style="font-size:15px;"></i> ติดตั้งแอปบนเครื่องนี้ ใช้ต่อได้แม้ไม่มีเน็ต</button></div>
+  `;
+  return html;
+}
+window.__goto = (id)=>{ state.tab=id; state.resStep=0; history.pushState(null,'','#'+id); renderTabs(); renderContent(); window.scrollTo(0,0); };
+
+/* =========================================================================
+   TAB: IDP PREP (ไฟล์ 2)
+   ========================================================================= */
+function escTa(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function idpTa(id,label,val,ph){
+  return `<div class="q"><div class="q-text">${label}</div><textarea class="txt" id="${id}" placeholder="${ph||''}">${escTa(val)}</textarea></div>`;
+}
+function idpChoiceCard(id,text,options,name,multi,sel,other){
+  let h = `<div class="card"><div class="q"><div class="q-text" id="${name}_qt"><span class="q-id">${id}</span>${text}</div><div class="opts" role="group" aria-labelledby="${name}_qt">`;
+  options.forEach((o,i)=>{ const c = multi?(Array.isArray(sel)&&sel.includes(i)):sel===i;
+    h += `<label class="opt${c?' checked':''}"><input type="${multi?'checkbox':'radio'}" name="${name}" value="${i}" ${c?'checked':''}> ${o}</label>`; });
+  h += `</div><input class="txt" style="margin-top:6px" id="${name}Other" placeholder="อื่นๆ (พิมพ์เพิ่มได้)" value="${(other||'').replace(/"/g,'&quot;')}"></div></div>`;
+  return h;
+}
+async function renderIDPPrep(){
+  const data = (await storeGet(pkey('idp_prep'))) || {};
+  let html = `<div class="section-head"><span class="num">02</span><h2>เตรียมตัวก่อนคุย IDP</h2></div>
+  <div class="section-desc">ตอบสั้นๆ ตามที่นึกออก ไม่ต้องเขียนสวย พิมพ์แล้วระบบบันทึกให้เองทันที</div>
+  ${progHTML('idp', data)}
+  <div class="card"><h3 style="margin-top:0;color:var(--ink);">มองงานตัวเองวันนี้ (เขียนสั้นๆ)</h3>`;
+  html += idpTa('idpT1','1. งานที่ฉันรับผิดชอบหลักตอนนี้ (3-5 อย่าง)', data.t1, 'เช่น ออกแบบลายเสื้อ, ตอบแชทลูกค้า, ขึ้นแพทเทิร์น...');
+  html += idpTa('idpT2','2. งานที่ฉันทำแล้วรู้สึกภูมิใจ / ทำได้ดีที่สุด', data.t2, 'งานที่ทำแล้วอยากเล่าให้คนอื่นฟัง');
+  html += idpTa('idpT3','3. งานที่ฉันทำแล้วรู้สึกฝืน / เหนื่อยใจ / ไม่ถนัด', data.t3, 'ตามจริงได้เลย ไม่เก็บข้อมูล');
+  html += idpTa('idpT4','4. งานแบบไหนที่ทำแล้วฉัน "ลืมเวลา" / มีความสุข', data.t4, 'ถนัด + ชอบ + รู้สึกมีคุณค่า');
+  html += `</div>
+  <div class="card"><h3 style="margin-top:0;color:var(--ink);">จุดแข็ง และสิ่งที่อยากพัฒนา</h3>`;
+  html += idpTa('idpS','จุดแข็ง 3 ข้อของฉัน (ทำได้ดีกว่าคนอื่นในทีม)', data.s, 'เช่น ออกแบบเร็ว ใจเย็นตอนลูกค้าโมโห จำรายละเอียดแม่น...');
+  html += idpTa('idpD','สิ่งที่ฉันอยากพัฒนา / ยังทำได้ไม่ดี (2-3 ข้อ)', data.d, 'เช่น การพูดต่อหน้าคนหลายคน การวางแผนงานล่วงหน้า...');
+  html += `</div>`;
+  html += idpChoiceCard('Q1','อีก 1-2 ปี คุณอยากโต/ไปทางไหนมากที่สุด?', IDP_GROW, 'idpGrow', false, data.grow, data.growOther);
+  html += idpChoiceCard('Q2','มีอะไรนอกงานที่อาจกระทบเวลา/พลังในการพัฒนาปีนี้? (เลือกได้หลายข้อ)', IDP_EXTERNAL, 'idpExternal', true, data.external, data.externalOther);
+  html += idpChoiceCard('Q3','ถ้าให้รับงานที่ใหญ่/ยากขึ้น คุณพร้อมเรื่องไหน? (เลือกได้หลายข้อ)', IDP_READY, 'idpReady', true, data.ready, data.readyOther);
+  html += idpChoiceCard('Q4','อยากให้บริษัทสนับสนุนอะไร เพื่อให้คุณโตได้? (เลือกได้หลายข้อ)', IDP_SUPPORT, 'idpSupport', true, data.support, data.supportOther);
+  html += `<div style="margin-top:16px;"><button class="btn ochre" onclick="goNext()">ถัดไป: บุคลิก & แรงจูงใจ →</button></div>`;
+  return html;
+}
+function collectIDP(){
+  return {
+    t1:valById('idpT1'), t2:valById('idpT2'), t3:valById('idpT3'), t4:valById('idpT4'),
+    s:valById('idpS'), d:valById('idpD'),
+    grow:getRadio('idpGrow'), growOther:valById('idpGrowOther'),
+    external:getChecks('idpExternal'), externalOther:valById('idpExternalOther'),
+    ready:getChecks('idpReady'), readyOther:valById('idpReadyOther'),
+    support:getChecks('idpSupport'), supportOther:valById('idpSupportOther') };
+}
+
+/* =========================================================================
+   TAB: SEAMIND (ไฟล์ 3)
+   ========================================================================= */
+async function renderSeamind(){
+  const data = (await storeGet(pkey('seamind'))) || {a:Array(16).fill(null), b:Array(12).fill(null), c:{}};
+
+  let html = `<div class="section-head"><span class="num">03</span><h2>SEAMIND — ส่วน A·B·C</h2></div>
+  <div class="section-desc">พนักงานตอบเอง เลือกข้อที่ตรงกับตัวเองที่สุด ไม่มีถูกผิด ตอบตามที่เป็นจริงพอ</div>`;
+  html += progHTML('seamind', data);
+
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">ส่วน A — บุคลิก 8 มิติ (16 ข้อ)</h3>`;
+  SM_A.forEach((item,qi)=>{
+    html += `<div class="q"><div class="q-text" id="smA${qi}_qt"><span class="q-id">A${qi+1}</span>${item[0]}</div><div class="opts" role="group" aria-labelledby="smA${qi}_qt">`;
+    item[1].forEach((opt,oi)=>{
+      const checked = data.a[qi]===oi;
+      html += `<label class="opt${checked?' checked':''}"><input type="radio" name="smA${qi}" value="${oi}" ${checked?'checked':''}><span class="k">${String.fromCharCode(65+oi)}.</span> ${opt[0]}</label>`;
+    });
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">ส่วน B — สไตล์พี่เลี้ยง & แรงจูงใจ (12 ข้อ)</h3>`;
+  SM_B.forEach((item,qi)=>{
+    html += `<div class="q"><div class="q-text" id="smB${qi}_qt"><span class="q-id">B${qi+1}</span>${item[0]}</div><div class="opts" role="group" aria-labelledby="smB${qi}_qt">`;
+    item[1].forEach((opt,oi)=>{
+      const checked = data.b[qi]===oi;
+      html += `<label class="opt${checked?' checked':''}"><input type="radio" name="smB${qi}" value="${oi}" ${checked?'checked':''}><span class="k">${String.fromCharCode(65+oi)}.</span> ${opt}</label>`;
+    });
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">ส่วน C — แรงจูงใจ / เป้าหมาย / ทรัพยากร (8 ข้อ)</h3>`;
+  html += mcQ('C1','อยากให้เส้นทางอาชีพในอนาคตของคุณเป็นแบบไหนมากที่สุด', SM_C1, data.c.c1, 'smC1', false);
+  html += mcQ('C2','สิ่งใดที่คุณให้ความสำคัญที่สุดในการทำงาน (เลือกข้อที่ตรงกับคุณมากที่สุด)', SM_C2, data.c.c2||[], 'smC2', true);
+  html += mcQ('C3','เพราะเหตุผลใดที่คุณเลือกทำงาน/อาชีพนี้', SM_C3, data.c.c3, 'smC3', false);
+  html += mcQ('C4','ทักษะด้านใดที่คุณอยากพัฒนาเพิ่มเติมมากที่สุดในตอนนี้', SM_C4, data.c.c4||[], 'smC4', true);
+  html += mcQ('C5','ในแต่ละสัปดาห์ คุณพอมีเวลาสำหรับพัฒนาตัวเอง (เรียนรู้/ฝึกฝนทักษะ) ประมาณเท่าไหร่', SM_C5, data.c.c5, 'smC5', false);
+  html += mcQ('C6','สถานการณ์เรื่องเวลาและงบประมาณของคุณตอนนี้เหมาะกับการพัฒนาตัวเองแบบใดมากที่สุด', SM_C6, data.c.c6, 'smC6', false);
+  html += mcQ('C7','วิธีการเรียนรู้แบบใดที่เหมาะกับคุณมากที่สุด', SM_C7, data.c.c7||[], 'smC7', true);
+  html += mcQ('C8','อะไรนอกงานที่อาจกระทบแผนพัฒนาของคุณใน 1 ปีนี้? (เลือกได้หลายข้อ)', IDP_EXTERNAL, Array.isArray(data.c.c8)?data.c.c8:[], 'smC8', true);
+  html += `</div>`;
+
+  html += `<div style="margin-top:16px;"><button class="btn ochre" onclick="goNext()">ถัดไป: งานที่ใช่ (IKIGAI) →</button></div>`;
+
+  return html;
+}
+function collectSeamind(){
+  const a = SM_A.map((_,qi)=>getRadio('smA'+qi));
+  const b = SM_B.map((_,qi)=>getRadio('smB'+qi));
+  const c = {
+    c1:getRadio('smC1'), c2:getChecks('smC2'), c3:getRadio('smC3'), c4:getChecks('smC4'),
+    c5:getRadio('smC5'), c6:getRadio('smC6'), c7:getChecks('smC7'), c8:getChecks('smC8')
+  };
+  return {a,b,c,others:collectOthers()};
+}
+function mcQ(id, text, options, sel, name, multi){
+  let html = `<div class="q"><div class="q-text" id="${name}_qt">${id?`<span class="q-id">${id}</span>`:''}${text}</div><div class="opts" role="group" aria-labelledby="${name}_qt">`;
+  options.forEach((opt,oi)=>{
+    const checked = multi ? (Array.isArray(sel)&&sel.includes(oi)) : sel===oi;
+    html += `<label class="opt${checked?' checked':''}"><input type="${multi?'checkbox':'radio'}" name="${name}" value="${oi}" ${checked?'checked':''}> ${opt}</label>`;
+  });
+  html += `</div>`;
+  if(options.some(o=>String(o).indexOf('อื่นๆ')===0)) html += `<input class="txt other-inp" data-other="${name}" placeholder="โปรดระบุเพิ่มเติม" style="display:none;margin-top:6px">`;
+  html += `</div>`;
+  return html;
+}
+function getRadio(name){ const r=document.querySelector(`input[name="${name}"]:checked`); return r?parseInt(r.value):null; }
+function getChecks(name){ return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(i=>parseInt(i.value)); }
+
+const TRAIT_PAIRS = [['logic','ใช้เหตุผล','emotion','ใช้ความรู้สึก'],['action','ลงมือเร็ว','reflection','ไตร่ตรองก่อน'],['tradition','ยึดระบบ','innovation','สร้างสรรค์'],['social','ทำกับคน','individual','ทำคนเดียว']];
+
+function computeSeamind(sm){
+  const traits = {logic:0,emotion:0,action:0,reflection:0,tradition:0,innovation:0,social:0,individual:0};
+  sm.a.forEach((oi,qi)=>{ if(oi!=null) SM_A[qi][1][oi][1].forEach(t=>traits[t]++); });
+  const sorted = Object.entries(traits).sort((x,y)=>y[1]-x[1]);
+  const top3 = sorted.slice(0,3), bottom2 = sorted.slice(-2);
+
+  const styleScore = {'วิเคราะห์':0,'โค้ช':0,'สมดุล':0,'เครือข่าย':0,'เดดไลน์':0,'ไอเดีย':0};
+  sm.b.forEach((oi,qi)=>{ if(oi==null) return; const k=`${qi+1}-${oi}`; if(MENTOR_MAP[k]) styleScore[MENTOR_MAP[k]]++; });
+  const mentorStyle = Object.entries(styleScore).sort((x,y)=>y[1]-x[1])[0];
+
+  const cadence = sm.b[6]!=null ? CADENCE_MAP[sm.b[6]] : null;
+  const motivScore = {};
+  [[8,sm.b[8]],[10,sm.b[10]]].forEach(([qi,oi])=>{ if(oi==null) return; const k=`${qi+1}-${oi}`; if(MOTIV_MAP[k]) motivScore[MOTIV_MAP[k]]=(motivScore[MOTIV_MAP[k]]||0)+1; });
+  const motivation = Object.entries(motivScore).sort((x,y)=>y[1]-x[1])[0];
+  const disengaged = sm.c.c3===6;
+
+  return {traits, top3, bottom2, mentorStyle, cadence, motivation, disengaged};
+}
+
+/* =========================================================================
+   TAB: IKIGAI (ไฟล์ 4)
+   ========================================================================= */
+async function renderIkigai(){
+  const dataSelf = (await storeGet(pkey('ikigai_self'))) || {ik9:Array(9).fill(3), circles:{love:5,good:5,world:5,paid:5}, ex:{}, ik1:null,ik2:null,ik3:null,ik4:null};
+
+  let html = `<div class="section-head"><span class="num">04</span><h2>งานที่ใช่ (IKIGAI)</h2></div>
+  <div class="section-desc">ดูว่างานที่ทำอยู่ตอบโจทย์ 4 ด้านไหม คือ รัก เก่ง โลกต้องการ และได้เงิน ด้านที่คะแนนต่ำสุดคือจุดที่ขาด</div>`;
+  html += progHTML('ikigai', dataSelf);
+
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">ประเมินความรู้สึกโดยรวม (ให้คะแนน 1-5)</h3>
+  <p class="hint" style="margin-top:-4px;margin-bottom:14px;">ต่อไปนี้เป็นข้อความเกี่ยวกับความรู้สึกที่คุณมีต่อชีวิตและการทำงาน กรุณาให้คะแนนความเห็นด้วยกับแต่ละข้อความ ตั้งแต่ 1 (ไม่เห็นด้วยเลย) ถึง 5 (เห็นด้วยที่สุด)</p>`;
+  IK9.forEach((q,i)=>{
+    html += `<div class="q"><div class="q-text"><span class="q-id">${i+1}</span>${q}</div>
+      <div class="slider-row"><span class="hint" style="width:52px;">1 ไม่ตรง</span><input type="range" min="1" max="5" value="${dataSelf.ik9[i]}" data-ik9="${i}" aria-label="ข้อ ${i+1}"><span class="hint" style="width:52px;text-align:right;">ตรง 5</span><span class="val">${dataSelf.ik9[i]}</span></div></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">ให้คะแนนงานตอนนี้ 4 ด้าน (0-10)</h3>
+  <p class="hint" style="margin-top:-4px;margin-bottom:14px;">ลากแถบให้ตรงกับงานที่ทำอยู่จริงตอนนี้ 0 = ไม่ใช่เลย, 10 = ใช่เต็มที่ ถ้านึกตัวอย่างได้ พิมพ์สั้นๆ ไว้ในช่องด้านล่างด้วยจะช่วยให้เข้าใจง่ายขึ้น</p>`;
+  IK_CIRCLES.forEach(([key,label,q])=>{
+    html += `<div class="q"><div class="q-text"><b>${label}</b> — ${q}</div>
+      <div class="slider-row"><span class="hint" style="width:52px;">0 ไม่ใช่</span><input type="range" min="0" max="10" value="${dataSelf.circles[key]}" data-circ="${key}" aria-label="ให้คะแนน ${label} 0 ถึง 10"><span class="hint" style="width:52px;text-align:right;">ใช่ 10</span><span class="val">${dataSelf.circles[key]}</span></div></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">คำถามเจาะจุด</h3>`;
+  html += mcQ('IK1','หากทุกงานให้ผลตอบแทนเท่ากันหมด คุณยังจะเลือกทำงานลักษณะนี้อยู่หรือไม่', IK1, dataSelf.ik1, 'ik1', false);
+  html += mcQ('IK2','งานที่คุณทำอยู่ในปัจจุบัน ได้ใช้ทักษะหรือความสามารถที่คุณถนัดมากน้อยเพียงใด', IK2, dataSelf.ik2, 'ik2', false);
+  html += mcQ('IK3','งานที่คุณทำอยู่ตอนนี้ ช่วยแก้ปัญหาจริงให้กับทีมหรือองค์กร หรือส่งผลกระทบที่จำเป็นมากน้อยเพียงใด', IK3_OPTS, dataSelf.ik3, 'ik3', false);
+  html += mcQ('IK4','โดยรวมแล้ว ความรู้สึกของคุณที่มีต่องานตอนนี้ตรงกับข้อใดมากที่สุด', IK4, dataSelf.ik4, 'ik4', false);
+  html += `</div><div style="margin-top:16px;"><button class="btn ochre" onclick="goNext()">ถัดไป: ทำไมถึงอยู่กับเรา →</button></div>`;
+
+  return html;
+}
+function collectIkigai(){
+  const ik9 = [...document.querySelectorAll('input[data-ik9]')].map(s=>parseInt(s.value));
+  const circles = {}; document.querySelectorAll('input[data-circ]').forEach(s=> circles[s.dataset.circ]=parseInt(s.value));
+  return {ik9, circles, ik1:getRadio('ik1'), ik2:getRadio('ik2'), ik3:getRadio('ik3'), ik4:getRadio('ik4'), others:collectOthers()};
+}
+
+/* =========================================================================
+   TAB: EVP & STAY INTERVIEW (ไฟล์ 8)
+   ========================================================================= */
+async function renderEVP(){
+  const dataSelf = (await storeGet(pkey('evp_self'))) || {enps:5, enpsReason:'', pillars:{}, reasons:[], reasonOther:'', s32:[], s33:[], s4:null};
+  EVP_PILLARS.forEach(([k])=>{ if(!dataSelf.pillars[k]) dataSelf.pillars[k]={good:3, important:3}; });
+
+  let html = `<div class="section-head"><span class="num">08</span><h2>ทำไมถึงอยู่กับเรา</h2></div>
+  <div class="section-desc">ให้พนักงานบอกเองว่าอะไรทำให้ยังอยากอยู่กับเราต่อ และมีอะไรที่อยากให้ดีขึ้น ตอบตามจริงได้เต็มที่ ไม่เก็บข้อมูล</div>
+  <div class="banner info"><i class="ti ti-lock" style="font-size:16px;"></i> <span>คำตอบชุดนี้บันทึกแบบไม่ระบุตัวตน ไม่เก็บข้อมูล</span></div>`;
+  html += progHTML('evp', dataSelf);
+
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">แบบสำรวจสั้น</h3>`;
+  html += `<div class="q"><div class="q-text"><span class="q-id">S1</span>หากเพื่อนหรือคนรู้จักของคุณกำลังมองหางาน คุณจะแนะนำให้เขามาทำงานที่นี่มากน้อยเพียงใด (0 = ไม่แนะนำเลย, 10 = แนะนำอย่างยิ่ง)</div>
+    <div class="slider-row"><span class="hint" style="width:60px;">0 ไม่แนะนำ</span><input type="range" min="0" max="10" value="${dataSelf.enps}" id="enps" aria-label="คะแนนแนะนำที่ทำงาน 0 ถึง 10"><span class="hint" style="width:56px;text-align:right;">แนะนำ 10</span><span class="val" id="enpsVal">${dataSelf.enps}</span></div></div>`;
+
+  html += `<div class="q"><div class="q-text"><span class="q-id">S2</span>ให้คะแนนเรื่องต่อไปนี้ 2 มุม — (ก) ที่นี่ทำได้ดีแค่ไหน / (ข) เรื่องนี้สำคัญกับคุณแค่ไหน (1 = น้อย, 5 = มาก)</div>`;
+  EVP_PILLARS.forEach(([k,label])=>{
+    html += `<div style="margin:8px 0;padding:10px 12px;background:var(--paper);border-radius:8px;">
+      <div style="font-size:13.5px;font-weight:600;margin-bottom:4px;">${label}</div>
+      <div class="row"><div style="flex:1;min-width:180px;"><span class="hint">(ก) ที่นี่ทำได้ดี</span>
+        <div class="slider-row"><input type="range" min="1" max="5" value="${dataSelf.pillars[k].good}" data-pgood="${k}" aria-label="${label} ที่นี่ทำได้ดี"><span class="val" data-pgoodval="${k}">${dataSelf.pillars[k].good}</span></div></div>
+      <div style="flex:1;min-width:180px;"><span class="hint">(ข) สำคัญกับฉัน</span>
+        <div class="slider-row"><input type="range" min="1" max="5" value="${dataSelf.pillars[k].important}" data-pimp="${k}" aria-label="${label} สำคัญกับฉัน"><span class="val" data-pimpval="${k}">${dataSelf.pillars[k].important}</span></div></div>
+      </div></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="q"><div class="q-text"><span class="q-id">S3</span>อะไรคือเหตุผลที่ทำให้คุณยังเลือกทำงานอยู่ที่นี่ (เลือกได้มากกว่า 1 ข้อ)</div><div class="opts">`;
+  EVP_REASONS.forEach((r,i)=>{
+    const checked = dataSelf.reasons.includes(i);
+    html += `<label class="opt${checked?' checked':''}"><input type="checkbox" name="evpReason" value="${i}" ${checked?'checked':''}> ${r}</label>`;
+  });
+  html += `</div><input class="txt" style="margin-top:6px;" placeholder="อื่นๆ (ถ้ามี)" id="reasonOther" value="${dataSelf.reasonOther||''}"></div>`;
+
+  html += mcQ('S4','ในช่วง 6 เดือนที่ผ่านมา มีเรื่องใดที่ทำให้คุณเคยคิดอยากลาออกบ้างหรือไม่ (เลือกได้มากกว่า 1 ข้อ)', EVP_NEARQUIT, dataSelf.s32||[], 's32mc', true);
+  html += mcQ('S5','หากเปลี่ยนได้เพียง 1 เรื่องเพื่อให้การทำงานที่นี่ดีขึ้น คุณอยากให้ปรับเรื่องใดมากที่สุด (เลือกได้มากกว่า 1 ข้อ)', EVP_CHANGE, dataSelf.s33||[], 's33mc', true);
+  html += mcQ('S6','เมื่อมองไปอีก 12 เดือนข้างหน้า คุณคิดว่าตัวเองจะเป็นอย่างไร', EVP_S4, dataSelf.s4, 's4', false);
+  html += `<div class="q"><div class="q-text"><span class="q-id">S7</span>อยากบอกอะไรกับผู้บริหารเพิ่มไหม? (ไม่บังคับ)</div>
+    <textarea class="txt" id="evpMsg" placeholder="เขียนไว้ก็ได้ ไม่เขียนก็ข้ามได้เลย">${escTa(dataSelf.s5)}</textarea></div>`;
+  html += `</div><div style="margin-top:16px;"><button class="btn ochre" onclick="goNext()">ถัดไป: ดูสรุปผล →</button></div>`;
+
+  return html;
+}
+function collectEVP(){
+  const pillars = {};
+  EVP_PILLARS.forEach(([k])=>{
+    const g=document.querySelector(`[data-pgood="${k}"]`), i=document.querySelector(`[data-pimp="${k}"]`);
+    pillars[k] = { good:g?parseInt(g.value):3, important:i?parseInt(i.value):3 };
+  });
+  const enpsEl = document.getElementById('enps');
+  return {
+    enps: enpsEl?parseInt(enpsEl.value):5,
+    pillars, reasons: getChecks('evpReason'), reasonOther: valById('reasonOther'),
+    s32: getChecks('s32mc'), s33: getChecks('s33mc'), s4: getRadio('s4'), s5: valById('evpMsg'), others: collectOthers(),
+  };
+}
+
+/* =========================================================================
+   TAB: 360 FEEDBACK (ไฟล์ 9)
+   ========================================================================= */
+function r360item(text,name){
+  return `<div class="q"><div class="q-text" style="font-size:14px;">${text}</div>
+    <div class="opts" style="flex-direction:row;flex-wrap:wrap;gap:8px;">
+      ${[1,2,3,4,5].map(v=>`<label class="opt" style="padding:6px 10px;"><input type="radio" name="${name}" value="${v}"><span class="k">${v}</span></label>`).join('')}
+      <label class="opt" style="padding:6px 10px;"><input type="radio" name="${name}" value="na"><span class="k">N/A</span></label>
+    </div></div>`;
+}
+function r360collect(names){ const o={}; names.forEach(n=>{ const r=document.querySelector(`input[name="${n}"]:checked`); o[n]=(r&&r.value!=='na')?parseInt(r.value):null; }); return o; }
+async function render360(){
+  let html = `<div class="section-head"><span class="num">09</span><h2>มองจากเพื่อนร่วมงาน (360°)</h2></div>
+  <div class="section-desc">ประเมินการส่งต่องานกับเพื่อนร่วมงานที่ทำงานด้วยกันจริง แยกเป็น 3 ส่วนตามความสัมพันธ์ — เลือกทำเฉพาะส่วนที่ตรงกับคุณ (ส่วนไหนไม่เกี่ยวข้ามได้)</div>
+  <div class="banner warn">⚠️ <span>รอบแรกใช้เพื่อ "พัฒนา" ล้วนๆ ไม่ผูกกับเงินเดือนหรือโบนัส และควรแจ้งทีมให้เข้าใจก่อนเริ่ม · ระบบไม่บันทึกว่าใครเป็นคนให้คะแนน</span></div>`;
+
+  // ---- ส่วนที่ 1: ปลายน้ำ ----
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">ส่วนที่ 1 — ประเมินคนที่ "ส่งงานให้คุณ" (คุณเป็นปลายน้ำ)</h3>
+    <p class="section-desc">ประเมินคุณภาพของสิ่งที่เขาส่งมาให้คุณ เช่น บรีฟ ไฟล์งาน หรือข้อมูล</p>
+    <input class="txt" id="dnRatee" placeholder="ชื่อเล่นเพื่อนที่คุณกำลังประเมิน (ไม่บังคับ)" style="margin-bottom:10px">`;
+  F360_DIMS.forEach(([dk,dl,items])=>{
+    html += `<div style="font-weight:600;color:var(--ink);margin:12px 0 4px;">${dl}</div>`;
+    items.forEach((it,ii)=> html += r360item(it,'dn_'+dk+'_'+ii));
+  });
+  html += mcQ('','สิ่งที่เขาทำได้ดีอยู่แล้ว และอยากให้ทำต่อ (เลือกได้มากกว่า 1 ข้อ)', F360_CONTINUE, [], 'dnCont', true);
+  html += mcQ('','สิ่งที่อยากให้เลิกหรือลด เพราะทำให้การทำงานร่วมกันสะดุด (เลือกได้มากกว่า 1 ข้อ)', F360_STOP, [], 'dnStop', true);
+  html += mcQ('','สิ่งที่อยากให้เริ่มทำ เพื่อให้การส่งต่องานราบรื่นขึ้น (เลือกได้มากกว่า 1 ข้อ)', F360_START, [], 'dnStart', true);
+  html += `<button class="btn ochre" id="dnSave">บันทึกส่วนที่ 1</button> <span class="hint" id="dnMsg"></span></div>`;
+
+  // ---- ส่วนที่ 2: ต้นน้ำ ----
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">ส่วนที่ 2 — ประเมินคนที่ "คุณส่งงานให้" (คุณเป็นต้นน้ำ)</h3>
+    <p class="section-desc">ประเมินว่าเขารับงานและร่วมมือกับคุณอย่างไร</p>
+    <input class="txt" id="upRatee" placeholder="ชื่อเล่นเพื่อนที่คุณกำลังประเมิน (ไม่บังคับ)" style="margin-bottom:10px">`;
+  F360_UPSTREAM.forEach((t,i)=> html += r360item(t,'up_'+i));
+  html += mcQ('','สิ่งที่เขาทำได้ดีอยู่แล้ว และอยากให้ทำต่อ (เลือกได้มากกว่า 1 ข้อ)', F360_CONTINUE, [], 'upCont', true);
+  html += mcQ('','สิ่งที่อยากให้เลิกหรือลด เพราะทำให้การทำงานร่วมกันสะดุด (เลือกได้มากกว่า 1 ข้อ)', F360_STOP, [], 'upStop', true);
+  html += mcQ('','สิ่งที่อยากให้เริ่มทำ เพื่อให้การส่งต่องานราบรื่นขึ้น (เลือกได้มากกว่า 1 ข้อ)', F360_START, [], 'upStart', true);
+  html += `<button class="btn ochre" id="upSave">บันทึกส่วนที่ 2</button> <span class="hint" id="upMsg"></span></div>`;
+
+  // ---- ส่วนที่ 3: ตัวเอง ----
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">ส่วนที่ 3 — ประเมินตัวเอง</h3>
+    <p class="section-desc">สะท้อนการส่งต่องานของตัวคุณเองอย่างตรงไปตรงมา</p>`;
+  F360_SELF.forEach((t,i)=> html += r360item(t,'self_'+i));
+  html += `<button class="btn ochre" id="selfSave">บันทึกส่วนที่ 3</button> <span class="hint" id="selfMsg"></span></div>`;
+
+  html += `<div class="stitch"></div><div id="f360Agg" class="card"><div class="hint">กำลังโหลด...</div></div>`;
+
+  setTimeout(async ()=>{
+    async function save(role, rateeId, names, opens, msgId){
+      const rec={role, ratee: rateeId?document.getElementById(rateeId).value:'', scores:r360collect(names), open:opens?{cont:getChecks(opens[0]),stop:getChecks(opens[1]),start:getChecks(opens[2])}:{}, others:collectOthers(), ts:Date.now()};
+      const id=Date.now()+'-'+Math.random().toString(36).slice(2,7);
+      await storeSet(pkey('360:'+id), rec);
+      document.getElementById(msgId).textContent='บันทึกแล้ว ✓';
+      renderAgg360();
+    }
+    document.getElementById('dnSave').onclick=()=>{ const n=[];F360_DIMS.forEach(([dk,,items])=>items.forEach((_,ii)=>n.push('dn_'+dk+'_'+ii))); save('ปลายน้ำ','dnRatee',n,['dnCont','dnStop','dnStart'],'dnMsg'); };
+    document.getElementById('upSave').onclick=()=>{ const n=F360_UPSTREAM.map((_,i)=>'up_'+i); save('ต้นน้ำ','upRatee',n,['upCont','upStop','upStart'],'upMsg'); };
+    document.getElementById('selfSave').onclick=()=>{ const n=F360_SELF.map((_,i)=>'self_'+i); save('ตัวเอง',null,n,null,'selfMsg'); };
+    renderAgg360();
+  },0);
+
+  async function renderAgg360(){
+    const keys=await storeListPrefix(pkey('360:'));
+    const el=document.getElementById('f360Agg'); if(!el)return;
+    const entries=(await Promise.all(keys.map(k=>storeGet(k)))).filter(Boolean);
+    const c={'ปลายน้ำ':0,'ต้นน้ำ':0,'ตัวเอง':0};
+    entries.forEach(e=>{ if(c[e.role]!=null)c[e.role]++; });
+    el.innerHTML=`<div class="hint">บันทึกในเครื่องนี้แล้ว: ปลายน้ำ ${c['ปลายน้ำ']} · ต้นน้ำ ${c['ต้นน้ำ']} · ตัวเอง ${c['ตัวเอง']} ครั้ง<br>ผลรวมจริงของแต่ละคนดูจากการส่งออกคำตอบ (ควรมีผู้ประเมิน ≥ 3–5 คนต่อคน จึงจะสรุปได้อย่างปลอดภัย)</div>`;
+  }
+  return html;
+}
+
+/* =========================================================================
+   TAB: RESULTS DASHBOARD
+   ========================================================================= */
+/* ---- คำแปลผลสำหรับหน้าสรุป (เขียนจากคำตอบที่ผู้ตอบเลือก) ---- */
+const TRAIT_NAME = {logic:'ใช้เหตุผล',emotion:'ใช้ความรู้สึก',action:'ลงมือเร็ว',reflection:'ไตร่ตรอง',tradition:'ยึดระบบ',innovation:'สร้างสรรค์',social:'ทำกับคน',individual:'ทำคนเดียว'};
+const TRAIT_DESC = {
+  logic:'ชอบคิดวิเคราะห์จากข้อมูลและเหตุผลก่อนตัดสินใจ',
+  emotion:'ให้น้ำหนักกับความรู้สึกของคนและบรรยากาศในทีม',
+  action:'ลงมือเร็ว เรียนรู้จากการลองทำจริง',
+  reflection:'ช่างคิด ชอบเตรียมให้รอบคอบก่อนเดินหน้า',
+  tradition:'ทำงานเป็นระบบ ยึดมาตรฐานที่พิสูจน์แล้วว่าได้ผล',
+  innovation:'มีไอเดีย ชอบลองวิธีใหม่ ไม่ยึดติดของเดิม',
+  social:'ได้พลังจากคน เชื่อมทีมและประสานงานได้ดี',
+  individual:'โฟกัสสูง ทำงานเดี่ยวได้ดี ต้องการพื้นที่คิดของตัวเอง',
+};
+const MOTIV_DESC = {
+  'Intrinsic (อิสระ/เติบโต)':'แรงขับเคลื่อนมาจากภายในตัวเอง อยากมีอิสระและได้เติบโต ไม่ต้องรอใครมาดัน',
+  'Identified/Integrated (ความหมาย)':'ทำงานเพราะเห็นความหมายและคุณค่าของมัน ไม่ใช่แค่ผลตอบแทน',
+  'Relatedness (ความสัมพันธ์)':'ความสัมพันธ์ที่ดีกับเพื่อนร่วมงานและหัวหน้าคือแรงสำคัญที่สุด',
+  'External (ผล/การยอมรับ)':'ขับเคลื่อนด้วยผลลัพธ์ที่ชัดเจน รางได้ และการยอมรับจากผู้อื่น',
+};
+const IK_SIDE_TEXT = {
+  love:'ได้ทำในสิ่งที่รักและเพลิน',
+  good:'ได้ใช้ความถนัดที่ตัวเองเก่ง',
+  world:'งานสร้างความหมายต่อคนอื่นและทีม',
+  paid:'ผลตอบแทนเป็นธรรมกับสิ่งที่ลงทุนให้',
+};
+const IK_WEAK_TEXT = {
+  love:'วงที่ยังเบาที่สุดคือเรื่องความรักในงาน หมายความว่าคุณอยู่กับงานนี้ได้เพราะเหตุผลอื่น เช่น ความมั่นคง รายได้ หรือเพื่อนร่วมงาน ไม่ใช่เพราะใจหลงให้ตัวงานเอง คนแบบนี้มักอยู่ได้นานและทำงานได้ดี แต่จะค่อยๆ เงียบและหมดสีไปเรื่อยๆ ถ้าไม่มีชิ้นงานที่ทำแล้วมีความสุขเข้ามาเติมเป็นระยะ ทางออกไม่จำเป็นต้องลาออก ลองขอชิ้นงานที่ใช้จุดแข็งของตัวเองเป็นหลัก หรือช่วยงานที่สนใจจริงๆ สักชิ้นควบคู่ไปกับงานประจำ',
+  good:'วงที่ยังเบาที่สุดคือเรื่องความถนัด หมายความว่างานที่ทำอยู่ยังไม่ได้ใช้จุดที่คุณเก่งที่สุดอย่างเต็มที่ คนที่เก่งแต่ไม่ได้ใช้มักรู้สึกเหมือนตัวเองถูกวางไว้ผิดที่ ทำงานเก่งแต่ไม่ค่อยภูมิใจ ทางออกคือค่อยๆ ขยับขอบเขตงานให้เข้าใกล้จุดแข็งของตัวเอง พร้อมกับพัฒนาทักษะที่งานต้องการให้ทันกันไป แทนที่จะนั่งรอให้ใครมาเห็นความเก่งนั้นเอง',
+  world:'วงที่ยังเบาที่สุดคือเรื่องความหมายของงานและผลที่ไปถึงคนอื่น หมายความว่าคุณยังไม่เห็นชัดว่างานที่ทำอยู่ช่วยใครหรือเปลี่ยนอะไรให้ดีขึ้น คนที่ขาดวงนี้มักทำงานได้ปกติดี แต่ลึกๆ จะรู้สึกเหมือนขาดอะไรบางอย่างที่บอกไม่ถูก ทางออกคือหาโอกาสได้เห็นผู้รับปลายทางจริง เช่น ผลงานที่ตัวเองทำถูกใช้จริง หรือเสียงของคนที่ได้รับประโยชน์ เพราะความหมายไม่ได้มาจากตัวงาน แต่มาจากการได้เห็นว่ามันไปถึงใคร',
+  paid:'วงที่ยังเบาที่สุดคือเรื่องผลตอบแทน หมายความว่าคุณรู้สึกว่าสิ่งที่ลงทุนให้กับงานยังไม่ได้กลับมาอย่างสมเหตุสมผล คนที่ขาดวงนี้ไม่ได้ต้องการเงินเพื่อความฟุ่มเฟือย แต่ต้องการความเป็นธรรมและการยอมรับในคุณค่าของตัวเอง ความรู้สึกนี้ถ้าสะสมนานจะกลายเป็นความขุ่นเคืองเงียบๆ ทางออกคือเตรียมข้อมูลผลงานของตัวเองให้พร้อม แล้วเปิดเรื่องคุยกับหัวหน้าอย่างตรงไปตรงมา ซึ่งได้ผลมากกว่าการรอให้ใครมาสังเกตเห็นเอง',
+};
+function pctOf(n,d){ n=Number(n)||0; d=Number(d)||1; return Math.round(n/d*100); }
+function pickTexts(arr, idxList){ return (idxList||[]).map(i=>arr[i]).filter(Boolean); }
+function emptyGo(tabId, setName){
+  return `<div class="empty">
+    <i class="ti ti-forms" style="font-size:36px;color:var(--line-2);"></i>
+    <div style="font-weight:600;font-size:15px;margin:10px 0 4px;">ยังไม่ได้ทำชุด${setName}</div>
+    <div class="hint" style="margin:0 0 16px;">ตอบชุดนี้ให้จบ แล้วกลับมาดู ผลส่วนนี้จะขึ้นเอง</div>
+    <button class="btn ghost" onclick="window.__goto('${tabId}')">ไปทำชุด${setName} →</button>
+  </div>`;
+}
+
+async function renderResults(){
+  const [idp, sm, ikSelf, evpSelf] = await Promise.all([
+    storeGet(pkey('idp_prep')), storeGet(pkey('seamind')), storeGet(pkey('ikigai_self')), storeGet(pkey('evp_self')),
+  ]);
+
+  let html = `<div class="section-head"><span class="num">★</span><h2>สรุปผล</h2></div>
+  <div class="section-desc">สรุปจากคำตอบที่เลือกไว้ในเครื่องนี้ อ่านแบบเดียวกับที่เพื่อนสนิทเล่าให้ฟัง ตรงไหนไม่ใช่ตัวเองก็ข้ามได้เลย</div><!--CARD-->`;
+  const flags = [];
+
+  /* ---------- 0 · ภาพรวม (สรุปข้ามส่วน) ---------- */
+  const rSm = (sm && sm.a && sm.a.some(x=>x!=null)) ? computeSeamind(sm) : null;
+  const motiv = rSm && rSm.motivation ? rSm.motivation[0] : null;
+  const ikWeak = (ikSelf && ikSelf.circles) ? Object.entries(ikSelf.circles).sort((a,b)=>a[1]-b[1])[0][0] : null;
+  const stayReasons = (evpSelf && evpSelf.reasons) ? pickTexts(EVP_REASONS, evpSelf.reasons) : [];
+  if(rSm || ikSelf || (evpSelf && evpSelf.pillars)){
+    const rings = [];
+    if(ikSelf && Array.isArray(ikSelf.ik9) && ikSelf.ik9.length){ rings.push(ringSVG(pctOf(ikSelf.ik9.reduce((a,b)=>a+(+b||0),0),45),'ความรู้สึกมีคุณค่า','Ikigai-9 รวม')); }
+    if(evpSelf && evpSelf.enps!=null){ rings.push(ringSVG(pctOf(evpSelf.enps,10),'แนะนำที่ทำงาน','ENPS')); }
+    if(rSm && rSm.mentorStyle && Array.isArray(sm.b)){ const mapped = sm.b.filter(x=>x!=null).length; if(mapped){ rings.push(ringSVG(pctOf(rSm.mentorStyle[1], mapped),'สไตล์พี่เลี้ยงที่เข้ากัน', rSm.mentorStyle[0])); } }
+    const synth = [];
+    if(rSm) synth.push(`เมื่อรวมคำตอบทั้งหมดเข้าด้วยกัน ภาพแรกที่ชัดคือ โดยธรรมชาติคุณเป็นคนที่<b>${TRAIT_DESC[rSm.top3[0][0]]}</b> และมีความสามารถรองที่โดดเด่นในเรื่องการ<b>${TRAIT_DESC[rSm.top3[1][0]]}</b> เมื่อสองอย่างนี้อยู่ด้วยกัน คนรอบข้างจึงมักเห็นคุณเป็นแบบเดียวกันที่คุณเห็นตัวเอง และงานที่ตรงกับสองด้านนี้คืองานที่คุณจะเก่งแบบไม่ต้องพยายามเทียบใคร`);
+    if(motiv && ikWeak){
+      const wk = circLabel(ikWeak);
+      if(ikWeak==='love' && /External/.test(motiv)) synth.push(`จุดที่น่าสนใจที่สุดในผลของคุณคือ สิ่งที่ขับเคลื่อนคุณคือ<b>ผลลัพธ์และความมั่นคง</b> แต่ในขณะเดียวกันด้านความรักในงานกลับเบาที่สุด สองเรื่องนี้บอกว่าคุณอยู่ที่นี่เพราะเหตุผลที่ดี ไม่ใช่เพราะใจหลงให้ ซึ่งแบบนี้ไปต่อได้อีกไกล แต่ถ้าไม่หาเชื้อไฟใส่เป็นระยะ วันหนึ่งเหตุผลที่ดีอาจไม่พออีกต่อไป`);
+      else if(ikWeak==='paid') synth.push(`สิ่งที่ขับเคลื่อนคุณคือ<b>${motiv}</b> แต่ด้านผลตอบแทนกลับเป็นด้านที่เบาที่สุดในสายตาคุณ ซึ่งไม่ได้แปลว่าคุณเงินขาด แต่แปลว่าคุณรู้สึกว่าสิ่งที่ให้ไปกับงานยังไม่ได้รับกลับมาอย่างสมน้ำสมเนื้อ และความรู้สึกนี้คือสิ่งที่ต้องเปิดคุย ไม่ใช่เก็บไว้เงียบๆ`);
+      else if(ikWeak==='world') synth.push(`คุณทำงานเพราะ<b>${motiv}</b> แต่ลึกๆ ยังรู้สึกว่างานยังไม่ได้สร้างความหมายให้ใครมากพอ คนที่มีด้านนี้เบามักไม่หายไปไหน แต่จะเบื่อเร็วกว่าที่ตัวเองคิด ลองหาโครงการหรือชิ้นงานที่เห็นผู้รับจริงมาเติมไว้ก่อน`);
+      else synth.push(`สิ่งที่ขับเคลื่อนคุณคือ<b>${motiv}</b> ส่วนด้านที่ยังเบาที่สุดในงานคือ<b>${wk}</b> ถ้าคุณเติมด้านนี้ได้ ชีวิตงานจะขยับขึ้นอีกขั้นอย่างที่ตัวเองก็จะแปลกใจ`);
+    } else if(motiv){ synth.push(`สิ่งที่ขับเคลื่อนคุณคือ<b>${motiv}</b>`); }
+    else if(ikWeak){ synth.push(`ด้านที่ยังเบาที่สุดในงานคือ<b>${circLabel(ikWeak)}</b>`); }
+    if(stayReasons.length>=2) synth.push(`และเมื่อถามว่าอะไรทำให้ยังเลือกอยู่กับที่นี่ คุณตอบเองว่า <b>${stayReasons.slice(0,2).join('</b> กับ <b>')}</b> สองเรื่องนี้คือเส้นเลือดของคุณกับบริษัท ตราบใดที่ยังถูกดูแลอยู่ คุณมักเลือกอยู่ต่อ`);
+    else if(stayReasons.length===1) synth.push(`และเมื่อถามว่าอะไรทำให้ยังเลือกอยู่กับที่นี่ คุณตอบเองว่า <b>${stayReasons[0]}</b> การยึดเหตุผลเดียวแบบนี้เปราะพอควร เพราะถ้าเรื่องเดียวนั้นเปลี่ยนไป คุณจะเหวี่ยงหนักกว่าคนที่มีเหตุผลหลายชั้น`);
+    if(synth.length){
+      html += `<div class="card" style="background:var(--ink);color:#EDEDED;border:none;">
+        <h3 style="margin-top:0;color:#fff;">สรุปผลภาพรวม: อ่านก่อนเข้าส่วนลึก</h3>
+        ${rings.length?`<div class="rings">${rings.join('')}</div>`:''}
+        <div style="font-size:14.5px;line-height:1.9;">${synth.join(' ')}</div>
+      </div><!--CARD-->`;
+    }
+  }
+
+  /* ---------- 1 · บุคลิก ---------- */
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">1 · บุคลิก</h3>`;
+  if(sm && sm.a && sm.a.some(x=>x!=null)){
+    const r = computeSeamind(sm);
+    TRAIT_PAIRS.forEach(([k1,l1,k2,l2])=>{
+      const t1=r.traits[k1], t2=r.traits[k2], total=t1+t2;
+      const p1 = total? pctOf(t1,total) : 50;
+      html += `<div class="bar-row"><span class="lbl">${l1}↔${l2}</span><div class="bar-track"><div class="bar-fill" style="width:${p1}%"></div></div><span class="num">${p1}:${100-p1}</span></div>`;
+    });
+    html += `<div style="margin-top:12px;font-size:14px;line-height:1.9;">
+      เมื่อรวมคำตอบส่วนบุคลิกทั้งหมดเข้าด้วยกัน ภาพที่ชัดที่สุดคือ คุณเป็นคนที่<b>${TRAIT_DESC[r.top3[0][0]]}</b> นี่ไม่ใช่ทักษะที่ฝึกมา แต่เป็นวิธีที่สมองของคุณเลือกใช้ก่อนเสมอเวลาเจอเรื่องงาน รองลงมาคุณยังเป็นคนที่<b>${TRAIT_DESC[r.top3[1][0]]}</b> และ${TRAIT_DESC[r.top3[2][0]]}อยู่ในตัวคุณไม่น้อย เมื่อสามด้านนี้รวมกัน สภาพแวดล้อมการทำงานที่คุณจะมีความสุขที่สุดจึงเป็นแบบที่ตามหลังตัวตนของคุณไปเอง
+      ในทางกลับกัน สองด้านที่คุณใช้น้อยที่สุดคือ <b>${TRAIT_NAME[r.bottom2[0][0]]}</b> และ <b>${TRAIT_NAME[r.bottom2[1][0]]}</b> ซึ่งไม่ได้แปลว่าคุณทำไม่ได้ แต่แปลว่าถ้าต้องทำงานที่ดึงสองด้านนี้ออกมาใช้ตลอดเวลา คุณจะเหนื่อยเร็วกว่างานอื่นหลายเท่า และอาจไม่เข้าใจด้วยซ้ำว่าทำไมเพื่อนร่วมงานบางคนถึงสนุกกับสิ่งที่คุณเอ็นดู รู้อย่างนี้ไว้จะช่วยคุณตอนเลือกรับงานใหม่ ต่อรองขอบเขตงาน หรือเลือกคนทำงานด้วยให้เติมช่องที่คุณไม่ถนัด
+      วิธีสังเกตตัวเองที่ง่ายที่สุดคือลองนึกย้อนไปสัปดาห์ที่ผ่านมา งานชิ้นไหนที่ทำแล้วรู้สึกเบามือและไหลเองเหมือนไม่ต้องออกแรง งานชิ้นนั้นแทบจะชัวร์ว่าตรงกับสามด้านหลักของคุณ ส่วนงานที่ตัวเองไม่ยากแต่รู้สึกหนักและเหนื่อยผิดปกติ มักเป็นงานที่ต้องใช้สองด้านที่อ่อนของคุณ ลองสังเกตแบบนี้สักสองสามรอบ คุณจะรู้จักตัวเองเพิ่มขึ้นทุกครั้งโดยไม่ต้องรอใครมาบอก
+    </div>`;
+    if(r.disengaged){ flags.push('บุคลิก: เลือก "ยังไม่แน่ใจ รู้สึกว่าต้องทำมากกว่าอยากทำ" อาจเป็นสัญญาณหมดไฟ'); }
+  } else { html += `<div class="empty">
+    <i class="ti ti-forms" style="font-size:36px;color:var(--line-2);"></i>
+    <div style="font-weight:600;font-size:15px;margin:10px 0 4px;">ยังไม่ได้ทำชุดบุคลิก & แรงจูงใจ</div>
+    <div class="hint" style="margin:0 0 16px;">ตอบชุดนี้ให้จบ แล้วกลับมาดู ผลส่วนนี้จะขึ้นเอง</div>
+    <button class="btn ghost" onclick="window.__goto('seamind')">ไปทำชุดบุคลิก & แรงจูงใจ →</button>
+  </div>`; }
+  html += `</div><!--CARD-->`;
+
+  /* ---------- 2 · แรงจูงใจ & สไตล์การเรียนรู้ ---------- */
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">2 · แรงจูงใจ & สไตล์การเรียนรู้</h3>`;
+  if(sm && sm.b && sm.b.some(x=>x!=null)){
+    const r = computeSeamind(sm);
+    const c = sm.c || {};
+    const styleScore = {'วิเคราะห์':0,'โค้ช':0,'สมดุล':0,'เครือข่าย':0,'เดดไลน์':0,'ไอเดีย':0};
+    sm.b.forEach((oi,qi)=>{ if(oi==null) return; const k=`${qi+1}-${oi}`; if(MENTOR_MAP[k]) styleScore[MENTOR_MAP[k]]++; });
+    const mapped = Object.values(styleScore).reduce((a,b)=>a+b,0);
+    const stylePct = (r.mentorStyle && mapped) ? pctOf(r.mentorStyle[1], mapped) : null;
+    const motiv = r.motivation ? r.motivation[0] : null;
+    const values = pickTexts(SM_C2, c.c2);
+    const develop = pickTexts(SM_C4, c.c4);
+    const learn = pickTexts(SM_C7, c.c7);
+    if(stylePct!=null){
+      html += `<div class="bar-row"><span class="lbl">สไตล์พี่เลี้ยง</span><div class="bar-track"><div class="bar-fill" style="width:${stylePct}%"></div></div><span class="num">${stylePct}%</span></div>
+      <div class="hint" style="margin-bottom:8px;">${r.mentorStyle[0]} คือคำแนะนำแบบที่เข้ากับคุณที่สุด (จาก ${mapped} ข้อที่แปลงได้)</div>`;
+    }
+    const c8txt = Array.isArray(c.c8) ? pickTexts(IDP_EXTERNAL, c.c8).join(' และ ') : (c.c8||'');
+    html += `<div style="font-size:14px;line-height:1.9;">`;
+    if(motiv){ html += `ลึกๆ แล้วสิ่งที่ทำให้คุณลุกจากที่นั่งไปทำงานคือ <b>${motiv}</b> ซึ่ง${MOTIV_DESC[motiv]||''} เรื่องนี้สำคัญมาก เพราะเวลาไหนที่งานหรือวิธีบริหารของหัวหน้าไปขัดกับแรงขับนี้ คุณจะไม่โต้แย้งหรอก แต่จะค่อยๆ หมดไฟแบบที่ตัวเองก็แยกไม่ออกว่าเริ่มจากอะไร ดังนั้นจำแรงขับของตัวเองไว้ให้ดี แล้วอย่าลังเลที่จะบอกคนรอบตัวตอนที่มันถูกขัดใจ<br>`; }
+    if(c.c3!=null && c.c1!=null){ html += `คุณเล่าเหตุผลที่เลือกทำงานนี้ไว้ว่า <b>"${SM_C3[c.c3]||'ไม่ระบุ'}"</b> และมองปลายทางของตัวเองไว้ที่การ<b>${SM_C1[c.c1]||'ไม่ระบุ'}</b> เมื่อสองเรื่องนี้วางคู่กัน มันคือเข็มทิศของคุณ ลองกลับมาอ่านคำสองคำนี้ทุก 6 เดือน วันที่คำตอบเปลี่ยนไปจากเดิม นั่นคือวันที่ควรไปคุยกับหัวหน้าก่อนที่ความรู้สึกจะตกไปไกลกว่านั้น<br>`; }
+    else { if(c.c3!=null){ html += `คุณเล่าเหตุผลที่เลือกทำงานนี้ไว้ว่า <b>"${SM_C3[c.c3]||'ไม่ระบุ'}"</b> ลองกลับมาถามตัวเองทุก 6 เดือนว่าคำนี้ยังจริงอยู่ไหม<br>`; } if(c.c1!=null){ html += `ปลายทางที่คุณมองไว้คือการ<b>${SM_C1[c.c1]||'ไม่ระบุ'}</b><br>`; } }
+    if(values.length){ html += `เรื่องที่คุณให้น้ำหนักในการทำงานคือ <b>${values.join(' และ ')}</b> ซึ่งถ้างานไหนไม่มีสิ่งเหล่านี้เลย คุณก็ยังทำได้ แต่จะเป็นการทำแบบหมดหน้าที่ ไม่ใช่ทำแบบมีความสุข<br>`; }
+    if(develop.length && learn.length){ html += `ด้านที่คุณอยากพัฒนาคือ <b>${develop.join(' และ ')}</b> และคุณรับความรู้ได้ดีที่สุดผ่าน<b>${learn.join(' และ ')}</b> ดังนั้นใครจะช่วยเหลือคุณ ไม่ว่าหัวหน้าหรือพี่เลี้ยง ควรเลือกวิธีแบบหลังเสมอ แล้วผลลัพธ์การพัฒนาจะต่างกันชัดเจน<br>`; }
+    else { if(develop.length){ html += `ด้านที่คุณอยากพัฒนาคือ <b>${develop.join(' และ ')}</b><br>`; } if(learn.length){ html += `คุณเรียนรู้ได้ดีที่สุดผ่าน<b>${learn.join(' และ ')}</b><br>`; } }
+    if(r.cadence){ html += `ส่วนจังหวะที่คุณอยากให้ติดตามงานคือ <b>${r.cadence}</b> ซึ่งเป็นข้อมูลที่หัวหน้าควรรู้ เพราะการตามงานผิดจังหวะกับคนผิดแบบ คือที่มาของความรู้สึกไม่ไว้ใจกันโดยไม่จำเป็น<br>`; }
+    if(c8txt){ html += `เรื่องนอกงานที่คุณเลือกไว้ว่ามีผลต่อแผนคือ <b>${c8txt}</b> ข้อมูลนี้ไม่ใช่ข้ออ้าง แต่เป็นบริบทชีวิตจริงของคุณ แผนพัฒนาที่ดีต้องคิดจากชีวิตจริงของคน ไม่ใช่คิดจากตารางงานอย่างเดียว<br>`; }
+    html += `</div>`;
+  } else { html += `<div class="empty">
+    <i class="ti ti-forms" style="font-size:36px;color:var(--line-2);"></i>
+    <div style="font-weight:600;font-size:15px;margin:10px 0 4px;">ยังไม่ได้ทำชุดบุคลิก & แรงจูงใจ</div>
+    <div class="hint" style="margin:0 0 16px;">ตอบชุดนี้ให้จบ แล้วกลับมาดู ผลส่วนนี้จะขึ้นเอง</div>
+    <button class="btn ghost" onclick="window.__goto('seamind')">ไปทำชุดบุคลิก & แรงจูงใจ →</button>
+  </div>`; }
+  html += `</div><!--CARD-->`;
+
+  /* ---------- 3 · งานที่ใช่ (IKIGAI) ---------- */
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">3 · งานที่ใช่ (IKIGAI)</h3>`;
+  if(ikSelf && ikSelf.circles){
+    const c = ikSelf.circles;
+    const sum9 = ikSelf.ik9.reduce((a,b)=>a+b,0);
+    const p9 = pctOf(sum9,45);
+    const band = p9>=80?'สูง':p9>=60?'ปานกลาง':'ต่ำ';
+    const weakest = Object.entries(c).sort((a,b)=>a[1]-b[1])[0][0];
+    html += `<div class="bar-row"><span class="lbl">ความรู้สึกโดยรวม</span><div class="bar-track"><div class="bar-fill" style="width:${p9}%"></div></div><span class="num">${p9}%</span></div>
+    <div class="hint" style="margin-bottom:10px;">ความรู้สึกมีคุณค่าในชีวิตงานรวมอยู่ระดับ${band} (จาก Ikigai-9)</div>`;
+    IK_CIRCLES.forEach(([k,l])=>{
+      const s = c[k]; const p = pctOf(s,10);
+      const level = s>=7?'แข็งแรง':s>=4?'ระดับกลาง':'ค่อนข้างอ่อน';
+      const tail = s>=7?'เต็มที่ในสายตาคุณ':s>=4?'อยู่ระดับที่พอใช้ได้':'ยังน้อยกว่าที่ควรเป็น คือจุดที่ควรเติม';
+      html += `<div class="bar-row"><span class="lbl">${l}</span><div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div><span class="num">${p}%</span></div>
+      <div class="hint">· <b>${l} ${p}% (${level})</b> คือการที่คุณได้${IK_SIDE_TEXT[k]}${tail}</div>`;
+    });
+    html += `<div style="margin-top:10px;font-size:14px;line-height:1.9;">เมื่อรวมทั้งสี่ด้านเข้าด้วยกัน ${IK_WEAK_TEXT[weakest]} และข่าวดีคือ การเติมวงที่ยังขาดไม่จำเป็นต้องเริ่มด้วยการลาออกหรือเปลี่ยนชีวิตทั้งชุด เพราะส่วนใหญ่เริ่มได้จากการปรับชิ้นงานในสัปดาห์นี้เลย</div>`;
+    if(weakest==='love') flags.push('IKIGAI: ด้านที่ขาดคือ "รัก" อยู่เพราะความมั่นคงแต่ขาดใจ ควรลองปรับงานให้ตรงจุดแข็งมากขึ้น');
+  } else { html += `<div class="empty">
+    <i class="ti ti-forms" style="font-size:36px;color:var(--line-2);"></i>
+    <div style="font-weight:600;font-size:15px;margin:10px 0 4px;">ยังไม่ได้ทำชุดงานที่ใช่ (IKIGAI)</div>
+    <div class="hint" style="margin:0 0 16px;">ตอบชุดนี้ให้จบ แล้วกลับมาดู ผลส่วนนี้จะขึ้นเอง</div>
+    <button class="btn ghost" onclick="window.__goto('ikigai')">ไปทำชุดงานที่ใช่ (IKIGAI) →</button>
+  </div>`; }
+  html += `</div><!--CARD-->`;
+
+  /* ---------- 4 · อะไรที่ทำให้คุณยังอยู่กับบริษัท ---------- */
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">4 · อะไรที่ทำให้คุณยังอยู่กับบริษัท</h3>`;
+  if(evpSelf && evpSelf.pillars){
+    const pEnps = pctOf(evpSelf.enps,10);
+    const enpsClass = evpSelf.enps>=9?'green':evpSelf.enps>=7?'yellow':'red';
+    const s4tier = evpSelf.s4!=null&&evpSelf.s4<=1?'green':evpSelf.s4===2?'yellow':'red';
+    const reasons = pickTexts(EVP_REASONS, evpSelf.reasons);
+    html += `<div class="bar-row"><span class="lbl">แนะนำที่ทำงาน</span><div class="bar-track"><div class="bar-fill" style="width:${pEnps}%"></div></div><span class="num">${pEnps}%</span></div>
+    <div class="hint" style="margin-bottom:10px;">ถ้าเพื่อนถามว่าน่าทำไหม คุณให้คะแนน ${pEnps}% <span class="pill ${enpsClass}">${evpSelf.enps>=9?'ชอบมาก':evpSelf.enps>=7?'เฉยๆ':'ไม่ค่อยชอบ'}</span> · อีก 12 เดือนข้างหน้า: ${EVP_S4[evpSelf.s4]||'ยังไม่ได้ตอบ'} <span class="pill ${s4tier}">${s4tier==='green'?'มั่นคง':s4tier==='yellow'?'สั่นคลอน':'เสี่ยงสูง'}</span></div>`;
+    EVP_PILLARS.forEach(([k,l])=>{
+      const pg = pctOf(evpSelf.pillars[k].good,5), pi = pctOf(evpSelf.pillars[k].important,5);
+      html += `<div class="bar-row"><span class="lbl">${l}</span><div class="bar-track"><div class="bar-fill" style="width:${pg}%"></div></div><span class="num">${pg}%</span></div>`;
+    });
+    html += `<div class="hint" style="margin-bottom:8px;">แถบและตัวเลข = ระดับที่คุณเห็นว่าที่นี่ทำได้ดีแค่ไหน (เรื่องที่คุณให้ความสำคัญถูกนำไปวิเคราะห์ช่องว่างในส่วนที่ 5 แล้ว)</div>`;
+    // โยงเหตุผลที่อยู่ เข้ากับตัวตนจากส่วนบุคลิก
+    const reasonJoin = reasons.length ? reasons.join(' และ ') : 'ไม่ได้เลือกเหตุผลเฉพาะเจาะจง';
+    let linkText = '';
+    const socialTop3 = rSm && rSm.top3.slice(0,3).some(t=>t[0]==='social');
+    const reasonHasPeople = reasons.some(x=>/เพื่อนร่วมงาน|หัวหน้า|บรรยากาศ|ผูกพัน/.test(x));
+    const reasonHasGrow = reasons.some(x=>/เรียนรู้|เห็นเส้นทาง|ก้าวหน้า/.test(x));
+    const reasonHasMoney = reasons.some(x=>/เงินเดือน|สวัสดิการ|มั่นคง/.test(x));
+    if(socialTop3 && reasonHasPeople){
+      linkText = `และเมื่อเอาไปเทียบกับผลส่วนบุคลิก ก็ไม่แปลกเลยที่คุณเลือกเรื่องคนกับบรรยากาศ เพราะธรรมชาติของคุณคือคนที่ได้พลังจากการอยู่กับคน คุณจึงเป็นคนที่อยู่ได้กับงานหนักก็ต่อเมื่อคนรอบตัวอบอุ่นเหมือนครอบครัว ข้อควรระวังข้องเดียวของคนแบบคุณคือ ความผูกพันแบบนี้ทำให้ทนกับปัญหาอื่นได้นานเกินควร เพราะใจไม่อยากทิ้งกัน ทั้งที่ตัวเองเหนื่อยมานานแล้ว`;
+    } else if(reasonHasGrow && rSm && /Intrinsic|ความหมาย/.test(motiv||'')){
+      linkText = `และเมื่อเทียบกับผลส่วนแรงจูงใจ ก็ตรงกันสนิท เพราะสิ่งที่ขับเคลื่อนคุณคือการได้เติบโตและเห็นความหมายของงาน การที่บริษัทยังตอบเรื่องการเรียนรู้อยู่จึงเป็นเหตุผลที่ทำให้คุณยังเลือกอยู่ แต่จำไว้ว่าคนแบบคุณจะเริ่มไม่สบายใจเงียบๆ ทันทีที่รู้สึกว่าไม่ได้เรียนอะไรเลยเป็นเดือน`;
+    } else if(reasonHasMoney && ikWeak && ikWeak==='paid'){
+      linkText = `น่าสังเกตว่าคุณเลือกเรื่องรายได้และความมั่นคงเป็นเหตุผลที่อยู่ ในขณะที่ด้านผลตอบแทนกลับเป็นด้านที่ให้คะแนนต่ำสุดในชุด IKIGAI แปลว่าคุณอยู่เพราะความมั่นคงที่มีอยู่ แต่ในใจยังรู้สึกว่าสิ่งที่ให้ไปกับงานยังไม่สมน้ำสมเนื้อ ซึ่งเป็นสัญญาณที่ควรเปิดคุยเรื่องค่าตอบแทนอย่างจริงจัง`;
+    } else {
+      linkText = `เหตุผลเหล่านี้ตรงกับสิ่งที่คุณให้น้ำหนักในชีวิตงานตามที่ตอบไว้ในหลายส่วน จึงเป็นคำตอบที่น่าเชื่อถือ ไม่ใช่คำตอบเพื่อให้รอด`;
+    }
+    // เทียบสิ่งที่บอกว่าสำคัญ (SM_C2) กับคะแนนที่ให้บริษัท
+    let valueCheck = '';
+    if(sm && sm.c && Array.isArray(sm.c.c2) && sm.c.c2.length){
+      const VAL2PILLAR = {0:'rewards',1:'opportunity',2:'org',3:'worklife',4:'opportunity',5:'people',6:'opportunity',7:'worklife'};
+      const pillarLabel = {}; EVP_PILLARS.forEach(([k,l])=>pillarLabel[k]=l);
+      const rows = [];
+      sm.c.c2.forEach(i=>{
+        const pk = VAL2PILLAR[i];
+        if(pk && evpSelf.pillars[pk]){
+          const g = pctOf(evpSelf.pillars[pk].good,5);
+          const v = SM_C2[i];
+          rows.push(`${v} (ที่คุณให้ ${g}%)`);
+        }
+      });
+      if(rows.length) valueCheck = `เมื่อเอาสิ่งที่คุณบอกว่าสำคัญในการทำงาน ไปเทียบกับคะแนนที่คุณให้บริษัทในแต่ละเรื่อง ได้ผลอย่างนี้: ${rows.join(' / ')} ตัวเลขนี้ช่วยบอกว่าเรื่องที่สำคัญกับคุณ บริษัทกำลังตอบโจทย์อยู่ระดับไหน ถ้าเรื่องไหนที่สำคัญแต่ตัวเลขต่ำ เรื่องนั้นคือความรู้สึกไม่จุใจที่สะสมอยู่ในใจคุณเงียบๆ`;
+    }
+    html += `<div style="font-size:14px;line-height:1.9;">พูดถึงการอยู่กับบริษัท คุณเลือกเองว่าเหตุผลที่ทำให้ยังอยู่คือ <b>${reasonJoin}</b> ${linkText} เหตุผลพวกนี้คือสัญญาที่ไม่ได้เซ็นตัวหนังสือระหว่างคุณกับบริษัท บริษัทอาจไม่รู้ด้วยซ้ำว่าคุณอยู่เพราะสิ่งเหล่านี้ ดังนั้นวันที่มันจางลง คุณจะเริ่มมองหาที่อื่นโดยที่ไม่มีใครทันตั้งตัว การที่คุณรู้ว่าตัวเองยึดอะไรไว้ จึงเท่ากับการรู้ว่าต้องดูแลอะไร${valueCheck ? '<br>'+valueCheck : ''}</div>`;
+    if(s4tier==='red') flags.push('แนวโน้มอยู่ต่อ: '+EVP_S4[evpSelf.s4]+' ควรรีบคุยเพื่อเข้าใจสาเหตุ');
+    if(evpSelf.enps<=6) flags.push('คะแนนแนะนำที่ทำงานต่ำ ('+pEnps+'%) มีเรื่องค้างคาใจที่ควรตามอุด');
+  } else { html += `<div class="empty">
+    <i class="ti ti-forms" style="font-size:36px;color:var(--line-2);"></i>
+    <div style="font-weight:600;font-size:15px;margin:10px 0 4px;">ยังไม่ได้ทำชุดทำไมถึงอยู่กับเรา</div>
+    <div class="hint" style="margin:0 0 16px;">ตอบชุดนี้ให้จบ แล้วกลับมาดู ผลส่วนนี้จะขึ้นเอง</div>
+    <button class="btn ghost" onclick="window.__goto('evp')">ไปทำชุดทำไมถึงอยู่กับเรา →</button>
+  </div>`; }
+  html += `</div><!--CARD-->`;
+
+  /* ---------- 5 · สิ่งที่ต้องการจากบริษัท ---------- */
+  html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">5 · สิ่งที่ต้องการจากบริษัท</h3>`;
+  if(evpSelf && evpSelf.pillars){
+    const gaps = EVP_PILLARS.map(([k,l])=>[l, evpSelf.pillars[k].important - evpSelf.pillars[k].good]).sort((a,b)=>b[1]-a[1]);
+    const changes = pickTexts(EVP_CHANGE, evpSelf.s33);
+    const nearquit = pickTexts(EVP_NEARQUIT, evpSelf.s32);
+    const support = idp && idp.support ? pickTexts(IDP_SUPPORT, idp.support) : [];
+    const topGaps = gaps.filter(g=>g[1]>0).slice(0,2);
+    if(topGaps.length){
+      html += `<div class="hint">เรื่องที่ "สำคัญกับคุณ แต่รู้สึกว่าบริษัทยังทำได้ไม่พอ" (เรียงจากห่างมากสุด):</div>`;
+      topGaps.forEach(([l,g])=> html += `<div class="bar-row"><span class="lbl">${l}</span><div class="bar-track"><div class="bar-fill" style="width:${pctOf(g,4)}%;background:var(--brick)"></div></div><span class="num">+${g}</span></div>`);
+      if(topGaps[0][1]>=3) flags.push('ช่องว่างใหญ่สุด: '+topGaps[0][0]+' สำคัญกับเขามากแต่เห็นว่าเรายังทำได้ไม่พอ');
+    } else {
+      html += `<div class="hint">ไม่มีเรื่องที่ห่างกันมาก สิ่งที่สำคัญกับคุณ บริษัททำได้ตามความคาดหวัง</div>`;
+    }
+    html += `<div style="margin-top:10px;font-size:14px;line-height:1.9;">`;
+    if(changes.length || nearquit.length || support.length){
+      html += `เมื่อรวมคำขอทั้งหมดเข้าด้วยกัน จะเห็นว่าสิ่งที่คุณขอไม่ได้มาจากอารมณ์ชั่ววูบ แต่สอดคล้องกับตัวตนที่อ่านได้จากทุกส่วนข้างบน ซึ่งเป็นเหตุผลที่คำขอเหล่านี้ควรถูกพูดถึงอย่างจริงจัง ไม่ใช่แค่จดไว้ในใจ<br>`;
+    }
+    if(changes.length){ html += `สิ่งที่คุณเลือกเองว่าอยากให้บริษัทปรับคือ <b>${changes.join(' และ ')}</b><br>`; }
+    if(nearquit.length){ html += `เรื่องที่เคยทำให้คุณคิดถึงการลาออกคือ <b>${nearquit.join(' และ ')}</b> จุดเหล่านี้คือรอยร้าวที่ยังไม่แตก แต่ถ้าเกิดซ้ำๆ โดยไม่มีใครแก้ มันจะกลายเป็นรอยแตกเมื่อไหร่ไม่มีใครรู้ คนที่ควรรู้เรื่องนี้คือหัวหน้าของคุณ ไม่ใช่ความคิดของคุณคนเดียว<br>`; }
+    if(support.length){ html += `การสนับสนุนที่คุณกล้าเปิดปากขอคือ <b>${support.join(' และ ')}</b> สังเกตไหมว่าสิ่งที่คุณขอไม่ใช่เรื่องฟุ่มเฟือย แต่คือเครื่องมือที่ทำให้คุณโตได้จริง<br>`; }
+    if(evpSelf.s5){ html += `และคุณฝากข้อความถึงผู้บริหารไว้ด้วยว่า <b>"${evpSelf.s5}"</b> ข้อความนี้ไม่มีชื่อกำกับ แต่มีความรู้สึกจริงอยู่ในนั้น`; }
+    html += `</div>`;
+  } else { html += `<div class="empty">
+    <i class="ti ti-forms" style="font-size:36px;color:var(--line-2);"></i>
+    <div style="font-weight:600;font-size:15px;margin:10px 0 4px;">ยังไม่ได้ทำชุดทำไมถึงอยู่กับเรา</div>
+    <div class="hint" style="margin:0 0 16px;">ตอบชุดนี้ให้จบ แล้วกลับมาดู ผลส่วนนี้จะขึ้นเอง</div>
+    <button class="btn ghost" onclick="window.__goto('evp')">ไปทำชุดทำไมถึงอยู่กับเรา →</button>
+  </div>`; }
+  html += `</div><!--CARD-->`;
+
+  /* ---------- ชวนคิดท้ายอ่าน ---------- */
+  html += `<div class="card" style="border:2px dashed var(--line-2);">
+    <h3 style="margin-top:0;color:var(--ink);">Reflection: เมื่อมองย้อนกลับมา</h3>
+    <p style="font-size:14.5px;line-height:1.9;margin:0 0 14px;">ผลสรุปนี้ไม่ได้มีไว้เพื่อกำหนดว่าคุณเป็นใคร หรือชี้ว่าคุณจะต้องเป็นเช่นนี้ตลอดไป เพราะคนเราสามารถเปลี่ยนแปลงและพัฒนาได้ตามประสบการณ์ บทบาท สภาพแวดล้อม และช่วงเวลาของชีวิต สิ่งสำคัญคือการใช้ข้อมูลนี้เป็นอีกหนึ่งมุมมองสำหรับทำความเข้าใจตนเอง และนำไปสู่การสะท้อนตนเองอย่างมีสติ</p>
+    <ul style="margin:0;padding-left:22px;font-size:14.5px;line-height:1.9;">
+      <li style="margin-bottom:10px;"><b>ข้อใดที่อ่านแล้วรู้สึกว่า "ตรงกับตัวเองมาก"</b> และข้อใดที่รู้สึกว่า "ไม่ตรงกับตัวเอง" ควรจดไว้ทั้งสองด้าน เพราะต่างก็ช่วยให้มองเห็นตนเองได้ชัดเจนขึ้น</li>
+      <li style="margin-bottom:10px;"><b>หากเลือกพัฒนาตนเองได้เพียง 1 เรื่องในช่วง 3 เดือนข้างหน้า</b> เรื่องนั้นควรเป็นอะไร และมีใครบ้างที่ควรรับรู้ เพื่อช่วยสนับสนุน ให้คำแนะนำ หรือสะท้อนผลการพัฒนา</li>
+      <li style="margin-bottom:10px;"><b>เหตุผลที่ทำให้ยังเลือกอยู่กับองค์กรในวันนี้</b> ยังเพียงพอสำหรับการอยู่ต่อในอีก 1 ปีหรือไม่ หากไม่เพียงพอ ควรพิจารณาว่าสิ่งใดควรได้รับการปรับเปลี่ยนเป็นลำดับแรก</li>
+      <li style="margin-bottom:10px;"><b>ลองพิจารณาภาพรวมทั้งหมดร่วมกัน</b> ว่ามีรูปแบบพฤติกรรมใดเกิดขึ้นซ้ำ จุดแข็งใดที่ควรนำมาใช้ให้มากขึ้น และมีด้านใดที่อาจเป็นข้อจำกัดต่อการเติบโต</li>
+      <li style="margin-bottom:10px;"><b>ไม่จำเป็นต้องยอมรับทุกข้อในผลสรุปนี้ว่าเป็นความจริงทั้งหมด</b> ควรเก็บส่วนที่รู้สึกว่าสอดคล้องไว้พิจารณา และใช้ส่วนที่ยังไม่แน่ใจเป็นคำถามสำหรับสำรวจตนเองเพิ่มเติม</li>
+      <li style="margin-bottom:10px;"><b>หากมีบางประเด็นที่ยังคงอยู่ในความคิดหลังจากอ่านจบ</b> อาจเป็นสัญญาณว่าประเด็นนั้นมีความหมายกับคุณ และสามารถนำไปพูดคุยต่อกับหัวหน้างาน ฝ่ายทรัพยากรบุคคล หรือบุคคลที่ไว้วางใจได้</li>
+    </ul>
+    <p style="font-size:14.5px;line-height:1.9;margin:14px 0 0;">เป้าหมายของผลสรุปนี้จึงไม่ใช่การนิยามตัวตน แต่คือการช่วยให้มองเห็นตนเองในปัจจุบันได้ชัดขึ้น เข้าใจเหตุผลเบื้องหลังความคิดและพฤติกรรมของตนเอง และสามารถเลือกได้อย่างมีสติว่าต้องการรักษา พัฒนา หรือเปลี่ยนแปลงสิ่งใดต่อไป</p>
+  </div><!--CARD-->`;
+
+  /* ---------- ธงรวม (โชว์เฉพาะเมื่อมีธง) ---------- */
+  if(flags.length){
+    html += `<div class="card" style="border-color:var(--ink);border-width:2px;border-style:solid;">
+      <h3 style="margin-top:0;color:var(--ink);"><i class="ti ti-flag" style="font-size:17px;"></i> จุดที่ต้องระวัง (${flags.length})</h3>
+      <ul style="margin:0;padding-left:20px;">${flags.map(f=>`<li style="margin-bottom:6px;">${f}</li>`).join('')}</ul>
+    </div><!--CARD-->`;
+  }
+
+  /* ---------- แบ่งการ์ดทีละใบ มีปุ่มไป/ย้อนกลับ ---------- */
+  const parts = html.split('<!--CARD-->');
+  const cards = parts.slice(1).map(x=>x.trim()).filter(Boolean);
+  state.resTotal = cards.length;
+  if(!(state.resStep>=0 && state.resStep<cards.length)) state.resStep = 0;
+  let out = parts[0] + cards[state.resStep];
+  if(state.resStep === cards.length-1){
+    out += `<div style="margin-top:18px;"><button class="btn danger" id="resetPerson">ล้างคำตอบทั้งหมด เริ่มใหม่</button></div>`;
+  }
+  out += `<div style="display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:18px;flex-wrap:wrap;">
+    <button class="btn ghost" onclick="resNav(-1)" ${state.resStep===0?'disabled':''}>ย้อนกลับ</button>
+    <span class="hint">การ์ด ${state.resStep+1} จาก ${cards.length}</span>
+    ${state.resStep<cards.length-1
+      ? `<button class="btn ochre" onclick="resNav(1)">ถัดไป</button>`
+      : `<span class="hint">อ่านจบแล้ว กดย้อนกลับเพื่อดูการ์ดที่ผ่านมาได้</span>`}
+  </div>`;
+  html = out;
+  setTimeout(()=>{
+    const rp = document.getElementById('resetPerson');
+    if(rp) rp.onclick = async ()=>{
+      if(!confirm(`ล้างคำตอบทั้งหมดในเครื่องนี้ถาวร?`)) return;
+      const keys = await storeListPrefix(`pp:`);
+      for(const k of keys) await storeDelete(k);
+      state.resStep = 0;
+      renderContent();
+    };
+  },0);
+  return html;
+}
+function resNav(d){
+  state.resStep = Math.max(0, Math.min((state.resTotal||1)-1, (state.resStep||0)+d));
+  renderContent();
+  window.scrollTo(0,0);
+}
+function circLabel(k){ return {love:'รัก',good:'เก่ง',world:'โลกต้องการ',paid:'ได้เงิน'}[k]||k; }
+function ringSVG(pct,label,sub){
+  const r=34, c=2*Math.PI*r, off=c*(1-Math.max(0,Math.min(100,pct))/100);
+  return `<div class="ring"><svg viewBox="0 0 84 84" width="84" height="84" role="img" aria-label="${label} ${pct}%">
+    <circle cx="42" cy="42" r="${r}" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="8"/>
+    <circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--ochre)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 42 42)"/>
+    <text x="42" y="48" text-anchor="middle" fill="#fff" font-size="17" font-family="Kanit,sans-serif" font-weight="700">${pct}%</text>
+  </svg><div class="rl">${label}</div>${sub?`<div class="rs">${sub}</div>`:''}</div>`;
+}
+
+/* =========================================================================
+   ROUTER
+   ========================================================================= */
+async function renderContent(){
+  const el = document.getElementById('content');
+  el.innerHTML = '<div class="hint">กำลังโหลด…</div>';
+  let html = '';
+  switch(state.tab){
+    case 'home': html = renderHome(); break;
+    case 'idp': html = await renderIDPPrep(); break;
+    case 'seamind': html = await renderSeamind(); break;
+    case 'ikigai': html = await renderIkigai(); break;
+    case 'evp': html = await renderEVP(); break;
+    case 'results': html = await renderResults(); break;
+  }
+  el.innerHTML = html;
+}
+
+function collectOthers(){ const o={}; document.querySelectorAll('.other-inp').forEach(x=>{ if((x.value||'').trim()) o[x.dataset.other]=x.value.trim(); }); return o; }
+document.addEventListener('change', function(e){
+  if(!e.target.matches || !e.target.matches('.opts input')) return;
+  const q=e.target.closest('.q'); if(!q) return;
+  const oi=q.querySelector('.other-inp'); if(!oi) return;
+  let show=false; q.querySelectorAll('.opts input:checked').forEach(inp=>{ const l=inp.closest('.opt'); if(l && l.textContent.indexOf('อื่นๆ')>=0) show=true; });
+  oi.style.display=show?'block':'none';
+});
+
+/* =========================================================================
+   AUTO-SAVE + NEXT — บันทึกอัตโนมัติทุกครั้งที่ตอบ ไม่ต้องกดปุ่มบันทึก
+   ========================================================================= */
+function valById(id){ const el=document.getElementById(id); return el?el.value:''; }
+const COLLECTORS = {
+  idp:     {key:'idp_prep',    collect:collectIDP},
+  seamind: {key:'seamind',     collect:collectSeamind},
+  ikigai:  {key:'ikigai_self', collect:collectIkigai},
+  evp:     {key:'evp_self',    collect:collectEVP},
+};
+const NEXT_TAB = {idp:'seamind', seamind:'ikigai', ikigai:'evp', evp:'results'};
+const PROG = {
+  idp:{total:10,label:'ตอบแล้ว',done:p=>['t1','t2','t3','t4','s','d'].filter(k=>((p[k]||'')+'').trim()).length+[p.grow,p.external,p.ready,p.support].filter(x=>x!=null&&(Array.isArray(x)?x.length>0:true)).length},
+  seamind:{total:36,label:'ตอบแล้ว',done:p=>(p.a||[]).filter(x=>x!=null).length+(p.b||[]).filter(x=>x!=null).length+['c1','c3','c5','c6'].filter(k=>p.c&&p.c[k]!=null).length+['c2','c4','c7'].filter(k=>Array.isArray(p.c&&p.c[k])&&p.c[k].length).length+((Array.isArray(p.c&&p.c.c8)&&p.c.c8.length)?1:0)},
+  ikigai:{total:4,label:'คำถามเจาะจุดตอบแล้ว',done:p=>[p.ik1,p.ik2,p.ik3,p.ik4].filter(x=>x!=null).length},
+  evp:{total:5,label:'ตอบแล้ว',done:p=>[p.reasons,p.s32,p.s33].filter(x=>Array.isArray(x)&&x.length).length+(p.s4!=null?1:0)+(((p.s5||'')+'').trim()?1:0)},
+};
+function progHTML(tab, data){
+  const g = PROG[tab]; if(!g) return '';
+  const d = Math.min(g.total, g.done(data||{}));
+  return `<div class="prog"><div class="prog-track"><div class="prog-fill" id="progFill" style="width:${Math.round(d/g.total*100)}%"></div></div><span class="prog-txt" id="progTxt">${g.label} ${d} จาก ${g.total}</span></div>`;
+}
+function patchProg(tab, payload){
+  const g = PROG[tab]; if(!g) return;
+  const f = document.getElementById('progFill'), t = document.getElementById('progTxt');
+  if(!f || !t) return;
+  const d = Math.min(g.total, g.done(payload));
+  f.style.width = Math.round(d/g.total*100)+'%';
+  t.textContent = `${g.label} ${d} จาก ${g.total}`;
+}
+async function goNext(){
+  const entry = COLLECTORS[state.tab];
+  if(entry){ try{ await storeSet(pkey(entry.key), entry.collect()); }catch(e){} }
+  if(NEXT_TAB[state.tab]) window.__goto(NEXT_TAB[state.tab]);
+}
+let _autoSaveT = null;
+function scheduleAutoSave(){
+  clearTimeout(_autoSaveT);
+  _autoSaveT = setTimeout(async ()=>{
+    const entry = COLLECTORS[state.tab];
+    if(!entry) return;
+    try{ const payload = entry.collect(); await storeSet(pkey(entry.key), payload); patchProg(state.tab, payload); setStatus('บันทึกอัตโนมัติ ✓'); }catch(e){}
+  }, 700);
+}
+// ไฮไลต์ตัวเลือกที่เลือก (รวมศูนย์ แทนการต่อสายแยกทีละแท็บ)
+document.addEventListener('change', function(e){
+  if(!e.target.matches || !e.target.matches('.opts input')) return;
+  const opts = e.target.closest('.opts'); if(!opts) return;
+  opts.querySelectorAll('.opt').forEach(o=>o.classList.toggle('checked', o.querySelector('input').checked));
+});
+// ตัวเลขข้าง slider ขยับตามการลาก
+document.addEventListener('input', function(e){
+  const t = e.target;
+  if(!t.matches) return;
+  if(t.matches('input[type=range][data-ik9], input[type=range][data-circ]')){ const v=t.nextElementSibling; if(v) v.textContent=t.value; }
+  else if(t.id==='enps'){ const v=document.getElementById('enpsVal'); if(v) v.textContent=t.value; }
+  else if(t.matches('input[type=range][data-pgood]')){ const v=document.querySelector(`[data-pgoodval="${t.dataset.pgood}"]`); if(v) v.textContent=t.value; }
+  else if(t.matches('input[type=range][data-pimp]')){ const v=document.querySelector(`[data-pimpval="${t.dataset.pimp}"]`); if(v) v.textContent=t.value; }
+});
+// บันทึกอัตโนมัติเมื่อมีการตอบ
+document.addEventListener('change', e=>{ if(e.target.closest && e.target.closest('#content')) scheduleAutoSave(); });
+document.addEventListener('input',  e=>{ if(e.target.closest && e.target.closest('#content')) scheduleAutoSave(); });
+
+function tabFromHash(){
+  const h = (location.hash||'').replace('#','');
+  return TABS.some(t=>t.id===h) ? h : 'home';
+}
+window.addEventListener('popstate', ()=>{
+  state.tab = tabFromHash(); state.resStep = 0;
+  renderTabs(); renderContent(); window.scrollTo(0,0);
+});
+/* ---- เว็บแอป: ลงทะเบียน service worker + ปุ่มติดตั้ง (โผล่เมื่อเบราว์เซอร์เสนอการติดตั้งได้) ---- */
+let __installEvt = null;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault(); __installEvt = e;
+  document.body.classList.add('can-install');
+});
+window.addEventListener('appinstalled', ()=>{
+  __installEvt = null;
+  document.body.classList.remove('can-install');
+});
+window.__installApp = async ()=>{
+  if(!__installEvt) return;
+  __installEvt.prompt();
+  await __installEvt.userChoice.catch(()=>{});
+  __installEvt = null;
+  document.body.classList.remove('can-install');
+};
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
+}
+
+async function init(){
+  state.tab = tabFromHash();
+  renderTabs();
+  renderContent();
+}
+init();
+</script>
+</body>
+</html>

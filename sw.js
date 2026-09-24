@@ -1,6 +1,7 @@
 /* Service worker — ทำให้เป็นเว็บแอปที่ติดตั้งได้และเปิดตอนออฟไลน์
-   เปลี่ยนอะไรใน index.html แล้ว อัปเวอร์ชัน CACHE ด้วยเสมอ ไม่งั้นผู้ใช้เก่าจะเห็นของเดิม */
-const CACHE = 'parich-survey-v4';
+   หน้า HTML ใช้ network-first: ออนไลน์อยู่ตอนไหนได้เวอร์ชันล่าสุดเสมอ ไม่มีเรื่องค้างของเก่าอีก
+   เปลี่ยนอะไรใน index.html แล้ว อัปเวอร์ชัน CACHE ด้วยเสมอ */
+const CACHE = 'parich-survey-v5';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', e => {
@@ -20,18 +21,29 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin === location.origin) {
-    /* ไฟล์ของแอปเอง: เอาจากแคชก่อน ถ้าไม่มีค่อยออกเครือข่าย แล้วเก็บกลับ ตอนออฟไลน์ล้มเหลวให้ย้อนกลับมาที่หน้าหลัก */
-    e.respondWith(
-      caches.match(req, { ignoreSearch: true }).then(hit =>
-        hit || fetch(req).then(res => {
+    if (req.mode === 'navigate' || req.destination === 'document') {
+      /* หน้าเว็บ: เอาจากเครือข่ายก่อนเสมอ ตกลงมาค่อยใช้แคช (ออฟไลน์) */
+      e.respondWith(
+        fetch(req).then(res => {
           const cp = res.clone();
           caches.open(CACHE).then(c => c.put(req, cp));
           return res;
-        }).catch(() => req.mode === 'navigate' ? caches.match('./index.html') : undefined)
-      )
-    );
+        }).catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || caches.match('./index.html')))
+      );
+    } else {
+      /* ไฟล์ประกอบ: แคชก่อน เครือข่ายสำรอง */
+      e.respondWith(
+        caches.match(req, { ignoreSearch: true }).then(hit =>
+          hit || fetch(req).then(res => {
+            const cp = res.clone();
+            caches.open(CACHE).then(c => c.put(req, cp));
+            return res;
+          }).catch(() => undefined)
+        )
+      );
+    }
   } else {
-    /* ซีดีเอ็นฟอนต์และไอคอน (Google Fonts, Tabler): เก็บไว้ใช้ตอนออฟไลน์เมื่อโหลดสำเร็จครั้งแรก */
+    /* ซีดีเอ็นฟอนต์และไอคอน: เก็บไว้ใช้ตอนออฟไลน์เมื่อโหลดสำเร็จครั้งแรก */
     e.respondWith(
       caches.match(req).then(hit =>
         hit || fetch(req).then(res => {

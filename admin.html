@@ -49,7 +49,7 @@
   .setchip{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:99px;border:1px solid var(--line-2);margin:1px 3px 1px 0;background:#fff;}
   .setchip.on{background:var(--ochre-light);border-color:#93C5FD;color:#1E3A8A;font-weight:600;}
   pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-size:12px;overflow-x:auto;font-family:'JetBrains Mono',monospace;}
-  .kv{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;font-size:13.5px;}
+  .kv{display:grid;grid-template-columns:230px 1fr;gap:6px 14px;font-size:13.5px;}
   .kv .k{color:var(--ink-soft);}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .empty{border:1px solid var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--ink-soft);background:#fff;}
@@ -222,14 +222,22 @@ function summarize(skey,p){
     [['external','เรื่องนอกงานที่กระทบ'],['ready','พร้อมรับงานใหม่'],['support','อยากให้สนับสนุน']].forEach(([k,l])=>{ if(Array.isArray(p[k])&&p[k].length) line.push(l+': '+p[k].length+' ข้อ'); });
   }else if(skey==='ikigai_self'){
     const c=p.circles||{};
-    line.push('วงรัก '+ (c.love??'-') +'/10 · เก่ง '+(c.good??'-')+'/10 · โลกต้องการ '+(c.world??'-')+'/10 · ได้เงิน '+(c.paid??'-')+'/10');
-    if(Array.isArray(p.ik9)) line.push('คะแนนรวม Ikigai-9: '+p.ik9.reduce((a,b)=>a+(+b||0),0)+'/45');
+    line.push('ชอบและมีใจกับงานที่ทำ: '+(c.love??'-')+' จาก 10');
+    line.push('ถนัดและทำได้ดี: '+(c.good??'-')+' จาก 10');
+    line.push('รู้สึกว่างานเป็นประโยชน์กับคนอื่น: '+(c.world??'-')+' จาก 10');
+    line.push('ความมั่นคงเรื่องรายได้: '+(c.paid??'-')+' จาก 10');
+    if(Array.isArray(p.ik9)) line.push('ความรู้สึกมีคุณค่าในชีวิตงานรวม: '+p.ik9.reduce((a,b)=>a+(+b||0),0)+' จาก 45');
   }else if(skey==='evp_self'){
-    line.push('แนะนำที่ทำงาน: '+(p.enps??'-')+'/10');
-    Object.entries(p.pillars||{}).forEach(([k,v])=>line.push(k+': ทำได้ '+(v.good??'-')+'/5 · สำคัญ '+(v.important??'-')+'/5'));
+    line.push('ถ้าเพื่อนถามว่าที่นี่น่าทำงานไหม ให้คะแนน: '+(p.enps??'-')+' จาก 10');
+    EVP_PILLARS.forEach(([k,l])=>{
+      const v=p.pillars&&p.pillars[k];
+      if(v) line.push(l+': บริษัททำได้ '+(v.good??'-')+' จาก 5 · สำคัญกับเขา '+(v.important??'-')+' จาก 5');
+    });
   }else if(skey==='seamind'){
     const a=(p.a||[]).filter(x=>x!=null).length, b=(p.b||[]).filter(x=>x!=null).length, ck=Object.keys(p.c||{}).filter(k=>p.c[k]!=null&&(!Array.isArray(p.c[k])||p.c[k].length)).length;
-    line.push('ตอบส่วนบุคลิก '+a+'/16 · ส่วนพี่เลี้ยง '+b+'/12 · ส่วนเป้าหมาย '+ck+'/8');
+    line.push('บุคลิก (ส่วน A): ตอบ '+a+' จาก 16 ข้อ');
+    line.push('สไตล์พี่เลี้ยง & แรงจูงใจ (ส่วน B): ตอบ '+b+' จาก 12 ข้อ');
+    line.push('เป้าหมาย & ทรัพยากร (ส่วน C): ตอบ '+ck+' จาก 8 ข้อ');
   }
   return line;
 }

@@ -1,6 +1,6 @@
 /* Service worker — ทำให้เป็นเว็บแอปที่ติดตั้งได้และเปิดตอนออฟไลน์
    เปลี่ยนอะไรใน index.html แล้ว อัปเวอร์ชัน CACHE ด้วยเสมอ ไม่งั้นผู้ใช้เก่าจะเห็นของเดิม */
-const CACHE = 'parich-survey-v2';
+const CACHE = 'parich-survey-v3';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', e => {

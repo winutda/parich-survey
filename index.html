@@ -277,6 +277,18 @@
 </style>
 </head>
 <body>
+<div id="consentGate" style="display:none;position:fixed;inset:0;background:rgba(17,17,17,.58);z-index:100;align-items:center;justify-content:center;padding:18px;">
+  <div class="card" style="max-width:540px;margin:0;">
+    <h3 style="margin:0 0 10px;color:var(--ink);font-size:18px;">ก่อนเริ่มตอบแบบสอบถาม</h3>
+    <ul style="margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.9;color:var(--charcoal);">
+      <li>แบบนี้<b>ไม่ระบุตัวตน</b> ไม่มีชื่อ ไม่มีอีเมล ไม่มีอะไรที่บอกว่าคำตอบชุดนี้เป็นของใคร</li>
+      <li>คำตอบจะถูกส่งเก็บในฐานข้อมูลกลางของบริษัท เพื่อ<b>รวมเป็นภาพรวมของทั้งทีม</b> ใช้ปรับปรุงการทำงานและสวัสดิการ</li>
+      <li>ผลสรุปรายบุคคลแสดงเฉพาะบนเครื่องของผู้ตอบเท่านั้น</li>
+      <li>อยากลบคำตอบของตัวเองเมื่อไหร่ก็ได้ ใช้ปุ่ม "ล้างคำตอบทั้งหมด" ท้ายหน้าสรุปผล</li>
+    </ul>
+    <button class="btn" id="consentOk" style="width:100%;">เข้าใจแล้ว เริ่มตอบแบบสอบถาม</button>
+  </div>
+</div>
 <div class="app">
   <nav class="rail" id="rail">
     <div class="rail-brand">
@@ -284,7 +296,7 @@
       <div class="s">ระบบประเมินคน → IDP</div>
     </div>
     <div id="tabs"></div>
-    <div class="rail-foot">แบบสอบถามพนักงานตอบเอง<br>ตอบแบบไม่ระบุตัวตน ไม่เก็บข้อมูล</div>
+    <div class="rail-foot">แบบสอบถามพนักงานตอบเอง<br>ตอบแบบไม่ระบุตัวตน · ไม่มีการระบุชื่อ</div>
   </nav>
   <div class="main">
     <div class="statusbar">
@@ -466,7 +478,7 @@ const F360_SELF = ["ฉันส่งงาน/บรีฟให้เพื�
 let state = { tab:'home', resStep:0, resTotal:1, cache:{} };
 
 // เปิด backend จริง: ใส่ค่าจาก Supabase (Settings → API) + รัน SQL schema (ตาราง submissions)
-const BACKEND = { url:"", anonKey:"" };
+const BACKEND = { url:"https://tkpblvpyciubqlnwpkhw.supabase.co", anonKey:"sb_publishable_zVB_8OCLOqHUkJelOBOVOg_2LzNPiKj" };
 
 function setStatus(msg, warn){
   const el = document.getElementById('saveStatus');
@@ -483,7 +495,8 @@ function cloudInsert(skey, value){
   if(!BACKEND.url || !BACKEND.anonKey) return; // ยังไม่เชื่อม = เก็บในเครื่องอย่างเดียว
   fetch(BACKEND.url.replace(/\/+$/,'')+'/rest/v1/submissions', {
     method:'POST',
-    headers:{'Content-Type':'application/json','apikey':BACKEND.anonKey,'Authorization':'Bearer '+BACKEND.anonKey,'Prefer':'return=minimal'},
+    /* ส่งเฉพาะ apikey ไม่ใส่ Authorization: โปรเจกต์นี้ตรวจ JWT เดิมแบบ Bearer แล้วสลับ role พลาด (เจอ 42501) ส่ง apikey เพียงอย่างเดียวได้ 201 ปกติ */
+    headers:{'Content-Type':'application/json','apikey':BACKEND.anonKey,'Prefer':'return=minimal'},
     body: JSON.stringify({ session_id: sessionId(), skey: skey, payload: value })
   }).catch(()=>{}); // fire-and-forget; ไม่บล็อก UI, ล้มเงียบถ้าออฟไลน์
 }
@@ -534,7 +547,7 @@ function renderHome(){
     <div class="eyebrow">ระบบดูแลและพัฒนาคน · The Parich</div>
     <h1>รู้จักคนของเราให้ลึกขึ้น</h1>
     <p>เครื่องมือช่วยทำความเข้าใจพนักงานแต่ละคน ว่าเขาถนัดอะไร อยากโตไปทางไหน และอะไรที่ทำให้เขาอยากอยู่กับเราต่อ เป็นแบบสอบถามที่พนักงานตอบเอง เลือกคำตอบและให้คะแนน ใช้เวลาไม่นาน</p>
-    <div class="hero-chips"><span>ไม่ระบุตัวตน ไม่เก็บข้อมูล</span><span>บันทึกอัตโนมัติ</span><span>ทำค้างไว้ทำต่อได้</span><span>ตอบจบเห็นผลสรุปทันที</span></div>
+    <div class="hero-chips"><span>ไม่ระบุตัวตน</span><span>บันทึกอัตโนมัติ</span><span>ทำค้างไว้ทำต่อได้</span><span>ตอบจบเห็นผลสรุปทันที</span></div>
   </div>
   <div class="home-grid">
     ${TABS.filter(t=>t.id!=='home'&&t.id!=='results').map(t=>`
@@ -550,7 +563,7 @@ function renderHome(){
     </div>
   </div>
   <div class="stitch"></div>
-  <div class="banner info"><i class="ti ti-info-circle" style="font-size:16px;"></i> <span>เลือกทำทีละแท็บได้เลย ตอบแล้วระบบบันทึกให้อัตโนมัติทันที ไม่ต้องกดบันทึก ทำค้างไว้แล้วกลับมาทำต่อได้ ตอบจบแต่ละชุดกด "ถัดไป" ด้านล่างได้เลย ตอบแบบไม่ระบุตัวตน ไม่เก็บข้อมูล</span></div>
+  <div class="banner info"><i class="ti ti-info-circle" style="font-size:16px;"></i> <span>เลือกทำทีละแท็บได้เลย ตอบแล้วระบบบันทึกให้อัตโนมัติทันที ไม่ต้องกดบันทึก ทำค้างไว้แล้วกลับมาทำต่อได้ ตอบจบแต่ละชุดกด "ถัดไป" ด้านล่างได้เลย ตอบแบบไม่ระบุตัวตน คำตอบถูกรวมเป็นภาพรวมของทั้งบริษัท ไม่มีการระบุชื่อผู้ตอบ</span></div>
   <div id="installRow"><button class="btn ghost" onclick="window.__installApp()"><i class="ti ti-device-mobile-down" style="font-size:15px;"></i> ติดตั้งแอปบนเครื่องนี้ ใช้ต่อได้แม้ไม่มีเน็ต</button></div>
   `;
   return html;
@@ -579,7 +592,7 @@ async function renderIDPPrep(){
   <div class="card"><h3 style="margin-top:0;color:var(--ink);">มองงานตัวเองวันนี้ (เขียนสั้นๆ)</h3>`;
   html += idpTa('idpT1','1. งานที่ฉันรับผิดชอบหลักตอนนี้ (3-5 อย่าง)', data.t1, 'เช่น ออกแบบลายเสื้อ, ตอบแชทลูกค้า, ขึ้นแพทเทิร์น...');
   html += idpTa('idpT2','2. งานที่ฉันทำแล้วรู้สึกภูมิใจ / ทำได้ดีที่สุด', data.t2, 'งานที่ทำแล้วอยากเล่าให้คนอื่นฟัง');
-  html += idpTa('idpT3','3. งานที่ฉันทำแล้วรู้สึกฝืน / เหนื่อยใจ / ไม่ถนัด', data.t3, 'ตามจริงได้เลย ไม่เก็บข้อมูล');
+  html += idpTa('idpT3','3. งานที่ฉันทำแล้วรู้สึกฝืน / เหนื่อยใจ / ไม่ถนัด', data.t3, 'ตามจริงได้เลย ไม่มีใครรู้ว่าใครตอบอะไร');
   html += idpTa('idpT4','4. งานแบบไหนที่ทำแล้วฉัน "ลืมเวลา" / มีความสุข', data.t4, 'ถนัด + ชอบ + รู้สึกมีคุณค่า');
   html += `</div>
   <div class="card"><h3 style="margin-top:0;color:var(--ink);">จุดแข็ง และสิ่งที่อยากพัฒนา</h3>`;
@@ -743,8 +756,8 @@ async function renderEVP(){
   EVP_PILLARS.forEach(([k])=>{ if(!dataSelf.pillars[k]) dataSelf.pillars[k]={good:3, important:3}; });
 
   let html = `<div class="section-head"><span class="num">08</span><h2>ทำไมถึงอยู่กับเรา</h2></div>
-  <div class="section-desc">ให้พนักงานบอกเองว่าอะไรทำให้ยังอยากอยู่กับเราต่อ และมีอะไรที่อยากให้ดีขึ้น ตอบตามจริงได้เต็มที่ ไม่เก็บข้อมูล</div>
-  <div class="banner info"><i class="ti ti-lock" style="font-size:16px;"></i> <span>คำตอบชุดนี้บันทึกแบบไม่ระบุตัวตน ไม่เก็บข้อมูล</span></div>`;
+  <div class="section-desc">ให้พนักงานบอกเองว่าอะไรทำให้ยังอยากอยู่กับเราต่อ และมีอะไรที่อยากให้ดีขึ้น ตอบตามจริงได้เต็มที่ ไม่มีการระบุชื่อ</div>
+  <div class="banner info"><i class="ti ti-lock" style="font-size:16px;"></i> <span>คำตอบชุดนี้ไม่ระบุชื่อผู้ตอบ นำไปรวมเป็นภาพรวมเท่านั้น</span></div>`;
   html += progHTML('evp', dataSelf);
 
   html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">แบบสำรวจสั้น</h3>`;
@@ -1311,6 +1324,8 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
 }
 
 async function init(){
+  try{ if(!localStorage.getItem('pp:consent')) document.getElementById('consentGate').style.display='flex'; }catch(e){}
+  document.getElementById('consentOk').onclick = ()=>{ try{ localStorage.setItem('pp:consent','1'); }catch(e){} document.getElementById('consentGate').style.display='none'; };
   state.tab = tabFromHash();
   renderTabs();
   renderContent();

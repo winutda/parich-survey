@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ระบบประเมินคน → IDP (The Parich)</title>
+<title>แบบประเมินเพื่อรู้จักตัวเอง · The Parich</title>
 <meta name="theme-color" content="#111111">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -223,8 +223,65 @@
   .home-card p{font-size:12.5px;color:var(--ink-soft);margin:0;}
 
   .stitch{border-top:2px dashed var(--line-2);margin:26px 0;}
-  #installRow{display:none;margin:-8px 0 16px;}
+  #installRow{display:none;margin-top:14px;}
   body.can-install #installRow{display:block;}
+  /* ---- welcome flow ---- */
+  .welcome-wrap{min-height:calc(100vh - 150px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+  .welcome-card{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 40px rgba(17,17,17,.08);padding:38px 36px;max-width:560px;width:100%;text-align:center;}
+  .w-kicker{font-family:'JetBrains Mono';font-size:12px;color:var(--ochre);letter-spacing:.05em;margin-bottom:14px;}
+  .w-title{font-size:31px;margin:0 0 14px;color:var(--ink);line-height:1.28;}
+  .w-text{font-size:15px;color:var(--charcoal);line-height:1.95;margin:0 0 24px;}
+  .w-list{text-align:left;margin:0 0 24px;display:flex;flex-direction:column;gap:15px;}
+  .w-item{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;line-height:1.75;color:var(--charcoal);}
+  .w-num{flex:none;width:26px;height:26px;border-radius:50%;background:var(--ochre-light);color:var(--ochre);font-family:'JetBrains Mono';font-weight:700;display:flex;align-items:center;justify-content:center;font-size:12.5px;margin-top:2px;}
+  .w-btn{width:100%;font-size:15px;padding:13px;}
+  .w-ghost{background:none;border:none;color:var(--ink-soft);font-size:13px;text-decoration:underline dotted;cursor:pointer;font-family:'Sarabun';margin-top:8px;padding:6px 10px;}
+  .wdots{display:flex;gap:6px;}
+  .wdots span{width:8px;height:8px;border-radius:50%;background:var(--line-2);}
+  .wdots span.on{background:var(--ochre);}
+  /* ---- กราฟในหน้าผลลัพธ์ ---- */
+  .mini{height:9px;background:#EFEFEF;border-radius:5px;overflow:hidden;}
+  .mini>div{height:100%;border-radius:5px;}
+  .gbar{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+  .gbar-lbl{width:185px;flex:none;font-size:12.5px;line-height:1.4;}
+  .gbar-rows{flex:1;display:flex;flex-direction:column;gap:3px;}
+  .gbar-val{width:78px;flex:none;text-align:right;font-family:'JetBrains Mono';font-size:10.5px;color:var(--ink-soft);}
+  .tagrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px;}
+  .taglbl{font-size:12px;color:var(--ink-soft);width:150px;flex:none;}
+  .tag{font-size:12.5px;background:#F4F4F4;border:1px solid var(--line);border-radius:99px;padding:3px 11px;color:var(--charcoal);}
+  .tag.hi{background:var(--ochre-light);border-color:#93C5FD;color:#1E3A8A;font-weight:600;}
+  .vgroup{margin:14px 0;}
+  .vgroup .vh{font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:9px;display:flex;align-items:center;gap:10px;}
+  .vgroup .vh::after{content:"";flex:1;height:1px;background:var(--line);}
+  .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+  .vtile{min-height:66px;display:flex;align-items:center;gap:11px;background:#FFFFFF;border:1px solid var(--line);border-radius:10px;padding:12px;}
+  .vtile .tic{flex:none;width:36px;height:36px;border-radius:9px;background:var(--ochre-light);color:var(--ochre);display:flex;align-items:center;justify-content:center;font-size:17px;}
+  .vtile .tx{font-size:13px;line-height:1.5;color:var(--charcoal);}
+  /* ---- interactive & motion ---- */
+  .vtile{transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;}
+  .vtile:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(29,78,216,.13);border-color:#93C5FD;}
+  .vtile:active{transform:scale(.97);}
+  .vtile .tic{transition:transform .18s ease;}
+  .vtile:hover .tic{transform:scale(1.14) rotate(-5deg);}
+  .bar-fill,.mini>div{transform-origin:left center;transform:scaleX(0);transition:transform .7s cubic-bezier(.22,.9,.34,1);}
+  .anim-in .bar-fill,.anim-in .mini>div{transform:scaleX(1);}
+  .prog-fill{transform-origin:left center;}
+  .radarpoly{transform-box:view-box;transform-origin:center;transform:scale(.25);opacity:0;transition:transform .8s cubic-bezier(.2,.8,.3,1), opacity .5s ease;}
+  .anim-in .radarpoly{transform:scale(1);opacity:1;}
+  .ring circle{transition:stroke-dashoffset .2s;}
+  .welcome-card{animation:rise .35s ease both;}
+  .w-item{opacity:0;transform:translateY(10px);animation:rise .45s ease forwards;}
+  .w-item:nth-child(1){animation-delay:.06s}.w-item:nth-child(2){animation-delay:.16s}
+  .w-item:nth-child(3){animation-delay:.26s}.w-item:nth-child(4){animation-delay:.36s}
+  .w-btn:active{transform:scale(.97);}
+  .val{display:inline-block;}
+  .val.pop{animation:vpop .32s ease;}
+  @keyframes vpop{40%{transform:scale(1.45);color:var(--ochre);}}
+  .opt:active{transform:scale(.985);}
+  .slider-row input[type=range]::-webkit-slider-thumb{transition:transform .15s ease;}
+  .slider-row input[type=range]:active::-webkit-slider-thumb{transform:scale(1.18);}
+  .slider-row input[type=range]::-moz-range-thumb{transition:transform .15s ease;}
+  .slider-row input[type=range]:active::-moz-range-thumb{transform:scale(1.18);}
   .rings{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;margin:2px 0 16px;}
   .ring{text-align:center;}
   .ring .rl{font-size:12px;color:#D6CFC8;margin-top:2px;}
@@ -268,9 +325,14 @@
     .bar-row .lbl{width:88px;font-size:12px;}
     table.plain{display:block;overflow-x:auto;font-size:12.5px;}
     .prog{gap:8px;}
+    .welcome-card{padding:26px 20px;}
+    .w-title{font-size:24px;}
+    .gbar-lbl{width:110px;font-size:11.5px;}
+    .taglbl{width:100%;margin-bottom:-2px;}
   }
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important;}
+    .bar-fill,.mini>div,.radarpoly{transform:none !important;opacity:1 !important;}
   }
 .idpchip{font-family:'Sarabun';font-size:12px;padding:4px 10px;border-radius:99px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--ink-soft);}
   .idpchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
@@ -292,11 +354,11 @@
 <div class="app">
   <nav class="rail" id="rail">
     <div class="rail-brand">
-      <div class="k">เล่มแม่ · The Parich</div>
-      <div class="s">ระบบประเมินคน → IDP</div>
+      <div class="k">The Parich</div>
+      <div class="s">แบบประเมินเพื่อรู้จักตัวเอง</div>
     </div>
     <div id="tabs"></div>
-    <div class="rail-foot">แบบสอบถามพนักงานตอบเอง<br>ตอบแบบไม่ระบุตัวตน · ไม่มีการระบุชื่อ<br><span class="mono">เวอร์ชัน 6</span> · 24 ก.ย. 69</div>
+    <div class="rail-foot">แบบสอบถามพนักงานตอบเอง<br>ตอบแบบไม่ระบุตัวตน · ไม่มีการระบุชื่อ<br><span class="mono">เวอร์ชัน 7</span> · 24 ก.ย. 69</div>
   </nav>
   <div class="main">
     <div class="statusbar">
@@ -312,7 +374,7 @@
    ========================================================================= */
 
 const TABS = [
-  {id:'home', tag:'00', label:'หน้าแรก', short:'หน้าแรก'},
+  {id:'home', tag:'00', label:'เริ่มต้น', short:'เริ่มต้น'},
   {id:'idp',  tag:'02', label:'เตรียมตัวก่อนคุย', short:'เตรียมตัว', sub:'เขียนสั้นๆ + ตัวเลือก'},
   {id:'seamind', tag:'03', label:'บุคลิก & แรงจูงใจ', short:'บุคลิก', sub:'36 ข้อ'},
   {id:'ikigai', tag:'04', label:'งานที่ใช่ (IKIGAI)', short:'งานที่ใช่', sub:'17 ข้อ'},
@@ -475,7 +537,7 @@ const F360_UPSTREAM = ["เขารับบรีฟ/งานที่ฉั�
 const F360_SELF = ["ฉันส่งงาน/บรีฟให้เพื่อนร่วมงานอย่างครบถ้วนและชัดเจน", "ฉันตอบกลับข้อความและประสานงานอย่างรวดเร็ว ไม่ปล่อยให้ค้าง", "ฉันส่งงานหรืออนุมัติงานตรงตามเวลาที่รับปากไว้", "ฉันเปิดรับฟีดแบ็กและปรับปรุงงานตามที่ตกลงกันไว้", "เมื่อมีปัญหาหรือความล่าช้า ฉันแจ้งให้ผู้ที่เกี่ยวข้องทราบล่วงหน้า", "เมื่อเกิดปัญหา ฉันช่วยกันแก้ไข ไม่โยนความผิดให้ผู้อื่น", "ฉันแก้ไขงานให้ตรงตามที่ตกลง ไม่ต้องแก้วนซ้ำหลายรอบ", "เมื่อฉันรับปากเรื่องใดไว้ ฉันทำได้จริงตามที่รับปาก"];
 
 /* ==== STORAGE LAYER (localStorage + Supabase append-only) — replaces window.storage ==== */
-let state = { tab:'home', resStep:0, resTotal:1, cache:{} };
+let state = { tab:'home', welcomeStep:1, resStep:0, resTotal:1, cache:{} };
 
 // เปิด backend จริง: ใส่ค่าจาก Supabase (Settings → API) + รัน SQL schema (ตาราง submissions)
 const BACKEND = { url:"https://tkpblvpyciubqlnwpkhw.supabase.co", anonKey:"sb_publishable_zVB_8OCLOqHUkJelOBOVOg_2LzNPiKj" };
@@ -542,32 +604,32 @@ window.matchMedia('(max-width:860px)').addEventListener('change', ()=>{ renderTa
    HOME
    ========================================================================= */
 function renderHome(){
-  const html = `
-  <div class="home-hero">
-    <div class="eyebrow">ระบบดูแลและพัฒนาคน · The Parich</div>
-    <h1>รู้จักคนของเราให้ลึกขึ้น</h1>
-    <p>เครื่องมือช่วยทำความเข้าใจพนักงานแต่ละคน ว่าเขาถนัดอะไร อยากโตไปทางไหน และอะไรที่ทำให้เขาอยากอยู่กับเราต่อ เป็นแบบสอบถามที่พนักงานตอบเอง เลือกคำตอบและให้คะแนน ใช้เวลาไม่นาน</p>
-    <div class="hero-chips"><span>ไม่ระบุตัวตน</span><span>บันทึกอัตโนมัติ</span><span>ทำค้างไว้ทำต่อได้</span><span>ตอบจบเห็นผลสรุปทันที</span></div>
-  </div>
-  <div class="home-grid">
-    ${TABS.filter(t=>t.id!=='home'&&t.id!=='results').map(t=>`
-      <div class="home-card" onclick="window.__goto('${t.id}')">
-        <span class="ic"><i class="ti ${ICONS[t.id]||'ti-forms'}"></i></span>
-        <h3>${t.label}</h3>
-        <p>${t.sub||''}</p>
-      </div>`).join('')}
-    <div class="home-card" onclick="window.__goto('results')" style="border-color:var(--line);">
-      <span class="ic"><i class="ti ${ICONS.results}"></i></span>
-      <h3>สรุปผล</h3>
-      <p>ดูภาพรวมของรหัสที่เลือกไว้ ครบทุกเครื่องมือ</p>
+  const step = state.welcomeStep || 1;
+  let inner = '';
+  if(step===1){
+    inner = `
+    <div class="w-kicker">ยินดีต้อนรับ</div>
+    <h1 class="w-title">แบบประเมิน<br>เพื่อรู้จักตัวเองให้มากขึ้น</h1>
+    <p class="w-text">แบบประเมินนี้มีเพื่อช่วยให้เราเข้าใจตัวเองมากขึ้น ทั้งเรื่อง สิ่งที่ถนัด สิ่งที่ให้พลังในการทำงาน สิ่งที่อยากพัฒนา และสิ่งที่ตอบโจทย์ในการทำงาน</p>
+    <button class="btn w-btn" onclick="state.welcomeStep=2;renderContent();">ถัดไป</button>`;
+  } else {
+    inner = `
+    <div class="w-kicker">ก่อนเริ่ม มี 4 เรื่องที่อยากให้ทราบ</div>
+    <div class="w-list">
+      <div class="w-item"><div class="w-num">1</div><div><b>ไม่มีคำตอบถูกหรือผิด</b><br>เลือกคำตอบที่ตรงกับตัวเองในตอนนี้มากที่สุด</div></div>
+      <div class="w-item"><div class="w-num">2</div><div><b>ผลลัพธ์ไม่ใช่ตัวกำหนดว่าเราเป็นใคร</b><br>คนเราสามารถเปลี่ยนแปลงและพัฒนาได้ตามประสบการณ์ บทบาท และสภาพแวดล้อม</div></div>
+      <div class="w-item"><div class="w-num">3</div><div><b>คำตอบใช้เพื่อการทำความเข้าใจตนเอง ไม่ใช่การตัดสิน</b><br>แบบประเมินนี้ออกแบบมาเพื่อช่วยให้เห็นรูปแบบ ความต้องการ และจุดที่อาจนำไปพัฒนาต่อได้</div></div>
+      <div class="w-item"><div class="w-num">4</div><div><b>ตอบแบบไม่ระบุตัวตน</b><br>ไม่มีชื่อหรืออะไรที่บอกว่าเป็นใคร ตอบเท่าไหร่ระบบบันทึกให้เอง ทำค้างไว้กลับมาทำต่อได้</div></div>
     </div>
-  </div>
-  <div class="stitch"></div>
-  <div class="hint" style="text-align:center;margin-bottom:10px;">รุ่น 6 · 24 ก.ย. 2569 · ถ้าเลขหนาข้างสไลเดอร์ไม่ขยับตาม แปลว่ายังใช้ของเก่า ลองเปิดลิงก์ใหม่ที่มี ?v=6 ท้าย URL</div>
-  <div class="banner info"><i class="ti ti-info-circle" style="font-size:16px;"></i> <span>เลือกทำทีละแท็บได้เลย ตอบแล้วระบบบันทึกให้อัตโนมัติทันที ไม่ต้องกดบันทึก ทำค้างไว้แล้วกลับมาทำต่อได้ ตอบจบแต่ละชุดกด "ถัดไป" ด้านล่างได้เลย ตอบแบบไม่ระบุตัวตน คำตอบถูกรวมเป็นภาพรวมของทั้งบริษัท ไม่มีการระบุชื่อผู้ตอบ</span></div>
-  <div id="installRow"><button class="btn ghost" onclick="window.__installApp()"><i class="ti ti-device-mobile-down" style="font-size:15px;"></i> ติดตั้งแอปบนเครื่องนี้ ใช้ต่อได้แม้ไม่มีเน็ต</button></div>
-  `;
-  return html;
+    <button class="btn w-btn" onclick="window.__goto('idp')">เริ่มทำแบบประเมิน</button>
+    <div><button class="w-ghost" onclick="window.__goto('results')">เคยทำแล้ว ดูผลสรุปของฉัน</button></div>
+    <div id="installRow"><button class="w-ghost" onclick="window.__installApp()"><i class="ti ti-device-mobile-down" style="font-size:14px;"></i> ติดตั้งแอปบนเครื่องนี้ ใช้ต่อได้แม้ไม่มีเน็ต</button></div>`;
+  }
+  return `<div class="welcome-wrap">
+    <div class="wdots"><span class="${step===1?'on':''}"></span><span class="${step===2?'on':''}"></span></div>
+    <div class="welcome-card">${inner}</div>
+    ${step===2?'<button class="w-ghost" onclick="state.welcomeStep=1;renderContent();">ย้อนกลับ</button>':''}
+  </div>`;
 }
 window.__goto = (id)=>{ state.tab=id; state.resStep=0; history.pushState(null,'','#'+id); renderTabs(); renderContent(); window.scrollTo(0,0); };
 
@@ -587,8 +649,8 @@ function idpChoiceCard(id,text,options,name,multi,sel,other){
 }
 async function renderIDPPrep(){
   const data = (await storeGet(pkey('idp_prep'))) || {};
-  let html = `<div class="section-head"><span class="num">02</span><h2>เตรียมตัวก่อนคุย IDP</h2></div>
-  <div class="section-desc">ตอบสั้นๆ ตามที่นึกออก ไม่ต้องเขียนสวย พิมพ์แล้วระบบบันทึกให้เองทันที</div>
+  let html = `<div class="section-head"><span class="num">02</span><h2>เตรียมตัวก่อนคุย IDP · ทบทวนตัวเอง</h2></div>
+  <div class="section-desc">ส่วนนี้จัดทำขึ้นเพื่อให้คุณได้ใช้เวลาสั้นๆ ทบทวนการทำงานของตนเอง โปรดตอบจากประสบการณ์จริงในช่วงที่ผ่านมา ทั้งสิ่งที่ทำได้ดี สิ่งที่ชอบ และสิ่งที่ยังต้องการพัฒนา เพื่อช่วยให้คุณเห็นตัวเองชัดขึ้น ไม่จำเป็นต้องเขียนสวย เพียงตอบให้ตรงกับความเป็นจริงมากที่สุด พิมพ์แล้วระบบบันทึกให้เองทันที</div>
   ${progHTML('idp', data)}
   <div class="card"><h3 style="margin-top:0;color:var(--ink);">มองงานตัวเองวันนี้ (เขียนสั้นๆ)</h3>`;
   html += idpTa('idpT1','1. งานที่ฉันรับผิดชอบหลักตอนนี้ (3-5 อย่าง)', data.t1, 'เช่น ออกแบบลายเสื้อ, ตอบแชทลูกค้า, ขึ้นแพทเทิร์น...');
@@ -1012,6 +1074,10 @@ async function renderResults(){
       const p1 = total? pctOf(t1,total) : 50;
       html += `<div class="bar-row"><span class="lbl">${l1}↔${l2}</span><div class="bar-track"><div class="bar-fill" style="width:${p1}%"></div></div><span class="num">${p1}:${100-p1}</span></div>`;
     });
+    const TRAIT_KEYS_ORDER = ['logic','emotion','action','reflection','tradition','innovation','social','individual'];
+    const maxT = Math.max(1, ...TRAIT_KEYS_ORDER.map(k=>r.traits[k]||0));
+    html += radarSVG(TRAIT_KEYS_ORDER.map(k=>({l:TRAIT_NAME[k]||k, v:r.traits[k]||0, m:maxT})));
+    html += `<div class="hint" style="text-align:center;margin-top:6px;">ยิ่งรูปยื่นออกไปทางไหน มิตินั้นยิ่งเด่นกับคุณ</div>`;
     html += `<div style="margin-top:12px;font-size:14px;line-height:1.9;">
       เมื่อรวมคำตอบส่วนบุคลิกทั้งหมดเข้าด้วยกัน ภาพที่ชัดที่สุดคือ คุณเป็นคนที่<b>${TRAIT_DESC[r.top3[0][0]]}</b> นี่ไม่ใช่ทักษะที่ฝึกมา แต่เป็นวิธีที่สมองของคุณเลือกใช้ก่อนเสมอเวลาเจอเรื่องงาน รองลงมาคุณยังเป็นคนที่<b>${TRAIT_DESC[r.top3[1][0]]}</b> และ${TRAIT_DESC[r.top3[2][0]]}อยู่ในตัวคุณไม่น้อย เมื่อสามด้านนี้รวมกัน สภาพแวดล้อมการทำงานที่คุณจะมีความสุขที่สุดจึงเป็นแบบที่ตามหลังตัวตนของคุณไปเอง
       ในทางกลับกัน สองด้านที่คุณใช้น้อยที่สุดคือ <b>${TRAIT_NAME[r.bottom2[0][0]]}</b> และ <b>${TRAIT_NAME[r.bottom2[1][0]]}</b> ซึ่งไม่ได้แปลว่าคุณทำไม่ได้ แต่แปลว่าถ้าต้องทำงานที่ดึงสองด้านนี้ออกมาใช้ตลอดเวลา คุณจะเหนื่อยเร็วกว่างานอื่นหลายเท่า และอาจไม่เข้าใจด้วยซ้ำว่าทำไมเพื่อนร่วมงานบางคนถึงสนุกกับสิ่งที่คุณเอ็นดู รู้อย่างนี้ไว้จะช่วยคุณตอนเลือกรับงานใหม่ ต่อรองขอบเขตงาน หรือเลือกคนทำงานด้วยให้เติมช่องที่คุณไม่ถนัด
@@ -1042,18 +1108,48 @@ async function renderResults(){
     const values = pickTexts(SM_C2, c.c2);
     const develop = pickTexts(SM_C4, c.c4);
     const learn = pickTexts(SM_C7, c.c7);
-    if(stylePct!=null){
-      html += `<div class="bar-row"><span class="lbl">สไตล์พี่เลี้ยง</span><div class="bar-track"><div class="bar-fill" style="width:${stylePct}%"></div></div><span class="num">${stylePct}%</span></div>
-      <div class="hint" style="margin-bottom:8px;">${r.mentorStyle[0]} คือคำแนะนำแบบที่เข้ากับคุณที่สุด (จาก ${mapped} ข้อที่แปลงได้)</div>`;
+    if(stylePct!=null && mapped){
+      html += `<div class="vgroup" style="margin-top:2px;"><div class="vh">สไตล์คำแนะนำที่เข้ากับคุณที่สุด</div>
+      <div class="tagrow" style="margin:0;"><span class="tag hi" style="font-size:13.5px;padding:5px 14px;">${r.mentorStyle[0]} · ${stylePct}%</span><span class="hint" style="margin:0;">จาก ${mapped} ข้อที่แปลงได้</span></div></div>`;
     }
-    const c8txt = Array.isArray(c.c8) ? pickTexts(IDP_EXTERNAL, c.c8).join(' และ ') : (c.c8||'');
+    const TILE_ICON = [
+      [/รายได้|เงิน|ค่าตอบ|มั่นคง/, 'ti-coins'],
+      [/ความหมาย|ผลกระทบ|ประโยชน์/, 'ti-heart-handshake'],
+      [/อิสระ|ยืดหยุ่น/, 'ti-feather'],
+      [/สื่อสาร|นำเสนอ|โน้มน้าว/, 'ti-presentation'],
+      [/สร้างสรรค์|ดีไซน์|คอนเทนต์/, 'ti-palette'],
+      [/วิดีโอ|คลิป/, 'ti-video'],
+      [/อ่าน|เอกสาร|บทความ/, 'ti-book'],
+      [/ลงมือ|ฝึก|ทำจริง/, 'ti-tools'],
+      [/เรียนสด|เวิร์กช็อป|คอร์ส/, 'ti-school'],
+      [/เพื่อน|พี่เลี้ยง|ร่วมงาน/, 'ti-users'],
+      [/เรียนต่อ|สอบ|ใบประกอบ/, 'ti-certificate'],
+      [/ย้าย|ที่อยู่/, 'ti-home-move'],
+      [/ครอบครัว|สุขภาพ/, 'ti-heart'],
+      [/เวลา|สมดุลชีวิต/, 'ti-clock'],
+    ];
+    const tileIcon = t => { for(const [re,ic] of TILE_ICON) if(re.test(t)) return ic; return 'ti-circle-check'; };
+    const tileRow = (label, items) => items && items.length
+      ? `<div class="vgroup"><div class="vh">${label}</div><div class="tgrid">${items.map(t=>`<div class="vtile"><div class="tic"><i class="ti ${tileIcon(t)}"></i></div><div class="tx">${t}</div></div>`).join('')}</div></div>`
+      : '';
+    /* สิ่งที่ให้น้ำหนัก: ไทล์ + แถบเชื่อมกับคะแนนเสา EVP ที่เขาให้บริษัท (ข้อมูลเดียวในกลุ่มนี้ท่ีทำกราฟจริงได้) */
+    const VAL2PILLAR_G = {0:'rewards',1:'opportunity',2:'org',3:'worklife',4:'opportunity',5:'people',6:'opportunity',7:'worklife'};
+    const valTiles = (c.c2||[]).map(i=>{
+      const t = SM_C2[i]; if(!t) return '';
+      return `<div class="vtile"><div class="tic"><i class="ti ${tileIcon(t)}"></i></div><div class="tx">${t}</div></div>`;
+    }).join('');
+    if(valTiles) html += `<div class="vgroup"><div class="vh">สิ่งที่ให้น้ำหนักในการทำงาน</div><div class="tgrid">${valTiles}</div></div>`;
+    html += tileRow('ด้านที่อยากพัฒนา', develop);
+    html += tileRow('รับความรู้ได้ดีผ่าน', learn);
+    const c8list = Array.isArray(c.c8) ? pickTexts(IDP_EXTERNAL, c.c8) : [];
+    html += tileRow('เรื่องนอกงานที่กระทบแผน', c8list);
+    const c8txt = c8list.join(' และ ') || (c.c8||'');
     html += `<div style="font-size:14px;line-height:1.9;">`;
     if(motiv){ html += `ลึกๆ แล้วสิ่งที่ทำให้คุณลุกจากที่นั่งไปทำงานคือ <b>${motiv}</b> ซึ่ง${MOTIV_DESC[motiv]||''} เรื่องนี้สำคัญมาก เพราะเวลาไหนที่งานหรือวิธีบริหารของหัวหน้าไปขัดกับแรงขับนี้ คุณจะไม่โต้แย้งหรอก แต่จะค่อยๆ หมดไฟแบบที่ตัวเองก็แยกไม่ออกว่าเริ่มจากอะไร ดังนั้นจำแรงขับของตัวเองไว้ให้ดี แล้วอย่าลังเลที่จะบอกคนรอบตัวตอนที่มันถูกขัดใจ<br>`; }
     if(c.c3!=null && c.c1!=null){ html += `คุณเล่าเหตุผลที่เลือกทำงานนี้ไว้ว่า <b>"${SM_C3[c.c3]||'ไม่ระบุ'}"</b> และมองปลายทางของตัวเองไว้ที่การ<b>${SM_C1[c.c1]||'ไม่ระบุ'}</b> เมื่อสองเรื่องนี้วางคู่กัน มันคือเข็มทิศของคุณ ลองกลับมาอ่านคำสองคำนี้ทุก 6 เดือน วันที่คำตอบเปลี่ยนไปจากเดิม นั่นคือวันที่ควรไปคุยกับหัวหน้าก่อนที่ความรู้สึกจะตกไปไกลกว่านั้น<br>`; }
     else { if(c.c3!=null){ html += `คุณเล่าเหตุผลที่เลือกทำงานนี้ไว้ว่า <b>"${SM_C3[c.c3]||'ไม่ระบุ'}"</b> ลองกลับมาถามตัวเองทุก 6 เดือนว่าคำนี้ยังจริงอยู่ไหม<br>`; } if(c.c1!=null){ html += `ปลายทางที่คุณมองไว้คือการ<b>${SM_C1[c.c1]||'ไม่ระบุ'}</b><br>`; } }
-    if(values.length){ html += `เรื่องที่คุณให้น้ำหนักในการทำงานคือ <b>${values.join(' และ ')}</b> ซึ่งถ้างานไหนไม่มีสิ่งเหล่านี้เลย คุณก็ยังทำได้ แต่จะเป็นการทำแบบหมดหน้าที่ ไม่ใช่ทำแบบมีความสุข<br>`; }
-    if(develop.length && learn.length){ html += `ด้านที่คุณอยากพัฒนาคือ <b>${develop.join(' และ ')}</b> และคุณรับความรู้ได้ดีที่สุดผ่าน<b>${learn.join(' และ ')}</b> ดังนั้นใครจะช่วยเหลือคุณ ไม่ว่าหัวหน้าหรือพี่เลี้ยง ควรเลือกวิธีแบบหลังเสมอ แล้วผลลัพธ์การพัฒนาจะต่างกันชัดเจน<br>`; }
-    else { if(develop.length){ html += `ด้านที่คุณอยากพัฒนาคือ <b>${develop.join(' และ ')}</b><br>`; } if(learn.length){ html += `คุณเรียนรู้ได้ดีที่สุดผ่าน<b>${learn.join(' และ ')}</b><br>`; } }
+    if(values.length){ html += `งานที่ไม่มีสิ่งที่คุณให้น้ำหนักเหล่านี้เลย คุณก็ยังทำได้ แต่จะเป็นการทำแบบหมดหน้าที่ ไม่ใช่ทำแบบมีความสุข<br>`; }
+    if(develop.length && learn.length){ html += `ใครจะช่วยพัฒนาคุณ ไม่ว่าหัวหน้าหรือพี่เลี้ยง ควรเลือกวิธีสอนจากวิธีเรียนรู้ที่ตรงกับคุณเสมอ แล้วผลลัพธ์การพัฒนาจะต่างกันชัดเจน<br>`; }
     if(r.cadence){ html += `ส่วนจังหวะที่คุณอยากให้ติดตามงานคือ <b>${r.cadence}</b> ซึ่งเป็นข้อมูลที่หัวหน้าควรรู้ เพราะการตามงานผิดจังหวะกับคนผิดแบบ คือที่มาของความรู้สึกไม่ไว้ใจกันโดยไม่จำเป็น<br>`; }
     if(c8txt){ html += `เรื่องนอกงานที่คุณเลือกไว้ว่ามีผลต่อแผนคือ <b>${c8txt}</b> ข้อมูลนี้ไม่ใช่ข้ออ้าง แต่เป็นบริบทชีวิตจริงของคุณ แผนพัฒนาที่ดีต้องคิดจากชีวิตจริงของคน ไม่ใช่คิดจากตารางงานอย่างเดียว<br>`; }
     html += `</div>`;
@@ -1078,6 +1174,7 @@ async function renderResults(){
       ? `เปิดด้วยภาพรวมก่อน สี่ด้านของคุณอยู่ใกล้กันมากจนเกือบเรียบ ซึ่งไม่ใช่เรื่องน่ากลัวอย่างที่คิด สมดุลแบบนี้แปลว่างานตอนนี้ยังพอดีตัว ยังไม่ใช่ทั้งที่ใช่ที่สุดและที่ต้องหนี และเป็นจุดที่ขยับไปทางไหนก็ได้ผล ถ้าเลือกทิศถูก`
       : `เปิดด้วยภาพรวมก่อน เมื่อวางสี่ด้านไว้ด้วยกัน ภาพที่ชัดคือด้าน "${circLabel(strongest)}" กำลังพาคุณไปข้างหน้า ขณะที่ด้าน "${circLabel(weakest)}" กำลังรั้งข้องอยู่ งานของคุณตอนนี้จึงให้ความรู้สึกก้ำกึ่ง ไม่ใช่เพราะมันแย่ แต่เพราะแรงสองทางนี้กำลังดึงกันอยู่`;
     html += `<div style="font-size:14px;line-height:1.9;">${openRel} ส่วนความรู้สึกมีคุณค่าในชีวิตงานโดยรวมของคุณอยู่ที่ ${p9} จาก 100 (จากชุดคำถาม Ikigai-9) ซึ่งเป็นตัวเลขที่บอกอารมณ์ภาพใหญ่ ไม่ใช่คำพิพากษา</div>`;
+    html += `<div style="text-align:center;margin:12px 0 4px;">${IK_CIRCLES.map(([k])=>ringSVGLight(pctOf(c[k],10), circLabel(k))).join('')}</div>`;
     IK_CIRCLES.forEach(([k,l])=>{
       const s = c[k]; const p = pctOf(s,10);
       const isAnchor = (k===strongest || k===weakest);
@@ -1106,10 +1203,16 @@ async function renderResults(){
     const stay12 = evpSelf.s4!=null ? `และเมื่อมองไปอีก 12 เดือน คุณเลือกไว้เองว่า ${EVP_S4[evpSelf.s4]||'ยังไม่ได้ตอบ'} ` : '';
     html += `<div class="hint" style="margin-bottom:10px;">ชุดนี้ไม่มีคะแนนผ่านไม่ผ่าน สิ่งที่เห็นตรงนี้คือการสะท้อนของคุณเอง ส่วนภาพรวมของทั้งบริษัทอยู่ที่ฝั่งผู้บริหาร</div>`;
     EVP_PILLARS.forEach(([k,l])=>{
-      const pg = pctOf(evpSelf.pillars[k].good,5), pi = pctOf(evpSelf.pillars[k].important,5);
-      html += `<div class="bar-row"><span class="lbl">${l}</span><div class="bar-track"><div class="bar-fill" style="width:${pg}%"></div></div><span class="num">${pg}%</span></div>`;
+      const g = pctOf(evpSelf.pillars[k].good,5), im = pctOf(evpSelf.pillars[k].important,5);
+      const gap = (evpSelf.pillars[k].important||0)-(evpSelf.pillars[k].good||0);
+      html += `<div class="gbar"><div class="gbar-lbl">${l}${gap>=2?` <span class="pill grey">เติมเรื่องนี้ +${gap}</span>`:''}</div>
+      <div class="gbar-rows">
+        <div class="mini"><div style="width:${g}%;background:var(--ochre);"></div></div>
+        <div class="mini"><div style="width:${im}%;background:#111111;"></div></div>
+      </div><div class="gbar-val">${g}% / ${im}%</div></div>`;
     });
-    html += `<div class="hint" style="margin-bottom:8px;">แถบและตัวเลข = ระดับที่คุณเห็นว่าที่นี่ทำได้ดีแค่ไหน (เรื่องที่คุณให้ความสำคัญถูกนำไปวิเคราะห์ช่องว่างในส่วนที่ 5 แล้ว)</div>`;
+    html += `<div class="legend" style="display:flex;gap:14px;font-size:12px;color:var(--ink-soft);margin:2px 0 10px;"><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--ochre);margin-right:5px;vertical-align:-1px;"></span>ที่นี่ทำได้จริง</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#111;margin-right:5px;vertical-align:-1px;"></span>สำคัญกับฉัน</span></div>
+    <div class="hint" style="margin-bottom:8px;">แถบล่าง (ดำ) ยาวกว่าแถบบน (น้ำเงิน) มาก = เรื่องสำคัญกับคุณแต่ยังรู้สึกว่าบริษัททำได้ไม่พอ</div>`;
     // โยงเหตุผลที่อยู่ เข้ากับตัวตนจากส่วนบุคลิก
     const reasonJoin = reasons.length ? reasons.join(' และ ') : 'ไม่ได้เลือกเหตุผลเฉพาะเจาะจง';
     let linkText = '';
@@ -1243,11 +1346,36 @@ function resNav(d){
   window.scrollTo(0,0);
 }
 function circLabel(k){ return {love:'รัก',good:'เก่ง',world:'โลกต้องการ',paid:'ได้เงิน'}[k]||k; }
+/* วงแหวนพื้นขาว สำหรับการ์ดผลลัพธ์ */
+function ringSVGLight(pct,label){
+  const r=30, c=2*Math.PI*r, off=c*(1-Math.max(0,Math.min(100,pct))/100);
+  return `<div style="display:inline-block;text-align:center;margin:0 8px 10px 0;">
+  <svg viewBox="0 0 72 72" width="72" height="72" role="img" aria-label="${label} ${pct}%">
+    <circle cx="36" cy="36" r="${r}" fill="none" stroke="#E5E5E5" stroke-width="8"/>
+    <circle cx="36" cy="36" r="${r}" fill="none" stroke="var(--ochre)" class="ringarc" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 36 36)"/>
+    <text x="36" y="41" text-anchor="middle" fill="#111111" font-size="15" font-family="Kanit,sans-serif" font-weight="700">${pct}</text>
+  </svg><div style="font-size:11.5px;color:#6B6B6B;">${label}</div></div>`;
+}
+/* เรดาร์ 8 มิติบุคลิก */
+function radarSVG(pts){
+  const n=pts.length, cx=140, cy=134, R=94;
+  const ang=i=>-Math.PI/2 + i*2*Math.PI/n;
+  const pt=(i,f)=>[cx+Math.cos(ang(i))*R*f, cy+Math.sin(ang(i))*R*f];
+  let grid='';
+  [0.25,0.5,0.75,1].forEach(f=>{ let d=''; for(let i=0;i<n;i++){const[x,y]=pt(i,f); d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);} grid+=`<path d="${d}Z" fill="none" stroke="#E5E5E5" stroke-width="1"/>`; });
+  let axes='', labels='', poly='';
+  pts.forEach((p,i)=>{
+    const[ax,ay]=pt(i,1); axes+=`<line x1="${cx}" y1="${cy}" x2="${ax.toFixed(1)}" y2="${ay.toFixed(1)}" stroke="#E5E5E5"/>`;
+    const f=Math.max(0,Math.min(1, p.m?(p.v/p.m):0)); const[px,py]=pt(i,f); poly+=(i?'L':'M')+px.toFixed(1)+' '+py.toFixed(1);
+    const[lx,ly]=pt(i,1.24); labels+=`<text x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="middle" fill="#6B6B6B" font-size="10" font-family="Sarabun,sans-serif">${p.l}</text>`;
+  });
+  return `<svg viewBox="0 0 280 268" style="max-width:300px;width:100%;display:block;margin:8px auto 0;" role="img" aria-label="กราฟเรดาร์บุคลิก ${n} มิติ">${grid}${axes}<path class="radarpoly" d="${poly}Z" fill="rgba(29,78,216,.16)" stroke="var(--ochre)" stroke-width="2"/>${labels}</svg>`;
+}
 function ringSVG(pct,label,sub){
   const r=34, c=2*Math.PI*r, off=c*(1-Math.max(0,Math.min(100,pct))/100);
   return `<div class="ring"><svg viewBox="0 0 84 84" width="84" height="84" role="img" aria-label="${label} ${pct}%">
     <circle cx="42" cy="42" r="${r}" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="8"/>
-    <circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--ochre)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 42 42)"/>
+    <circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--ochre)" class="ringarc" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 42 42)"/>
     <text x="42" y="48" text-anchor="middle" fill="#fff" font-size="17" font-family="Kanit,sans-serif" font-weight="700">${pct}%</text>
   </svg><div class="rl">${label}</div>${sub?`<div class="rs">${sub}</div>`:''}</div>`;
 }
@@ -1268,6 +1396,35 @@ async function renderContent(){
     case 'results': html = await renderResults(); break;
   }
   el.innerHTML = html;
+  setTimeout(bindAnim, 60);
+}
+
+/* ================= Interactive & motion ================= */
+const REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const animIO = ('IntersectionObserver' in window) && !REDUCE_MOTION
+  ? new IntersectionObserver(es=>{ es.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('anim-in'); countUp(en.target); drawRings(en.target); animIO.unobserve(en.target); } }); }, {threshold:.2})
+  : null;
+function bindAnim(){
+  document.querySelectorAll('.card, .welcome-card').forEach(el=>{ if(animIO){ animIO.observe(el); } else { el.classList.add('anim-in'); } });
+}
+function countUp(scope){
+  if(REDUCE_MOTION) return;
+  scope.querySelectorAll('.num').forEach(el=>{
+    const t=(el.textContent||'').trim(); const m=t.match(/^(\d+)/); if(!m) return;
+    const target=parseInt(m[1]); if(!target) return; const suf=t.slice(m[1].length);
+    const t0=performance.now(), dur=650;
+    (function step(now){ const p=Math.min(1,(now-t0)/dur); const e=1-Math.pow(1-p,3);
+      el.textContent=Math.round(target*e)+suf; if(p<1) requestAnimationFrame(step); })(t0);
+  });
+}
+function drawRings(scope){
+  if(REDUCE_MOTION) return;
+  scope.querySelectorAll('.ringarc').forEach(c=>{
+    const dash=c.getAttribute('stroke-dasharray'); const off=c.getAttribute('stroke-dashoffset');
+    if(!dash||!off) return;
+    c.style.transition='none'; c.style.strokeDashoffset=dash;
+    requestAnimationFrame(()=>{ c.style.transition='stroke-dashoffset .9s cubic-bezier(.25,.8,.3,1)'; c.style.strokeDashoffset=off; });
+  });
 }
 
 function collectOthers(){ const o={}; document.querySelectorAll('.other-inp').forEach(x=>{ if((x.value||'').trim()) o[x.dataset.other]=x.value.trim(); }); return o; }
@@ -1348,6 +1505,13 @@ document.addEventListener('input', e=>{
   const row = t.closest('.slider-row'); if(!row) return;
   const v = row.querySelector('.val');
   if(v) v.textContent = t.value;
+});
+document.addEventListener('change', e=>{
+  const t = e.target;
+  if(!t.matches || !t.matches('input[type=range]')) return;
+  const row = t.closest('.slider-row'); if(!row) return;
+  const v = row.querySelector('.val');
+  if(v){ v.classList.remove('pop'); void v.offsetWidth; v.classList.add('pop'); }
 });
 
 function tabFromHash(){

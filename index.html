@@ -721,7 +721,7 @@ async function renderIkigai(){
   <p class="hint" style="margin-top:-4px;margin-bottom:14px;">ต่อไปนี้เป็นข้อความเกี่ยวกับความรู้สึกที่คุณมีต่อชีวิตและการทำงาน กรุณาให้คะแนนความเห็นด้วยกับแต่ละข้อความ ตั้งแต่ 1 (ไม่เห็นด้วยเลย) ถึง 5 (เห็นด้วยที่สุด)</p>`;
   IK9.forEach((q,i)=>{
     html += `<div class="q"><div class="q-text"><span class="q-id">${i+1}</span>${q}</div>
-      <div class="slider-row"><span class="hint" style="width:52px;">1 ไม่ตรง</span><input type="range" min="1" max="5" value="${dataSelf.ik9[i]}" data-ik9="${i}" aria-label="ข้อ ${i+1}"><span class="hint" style="width:52px;text-align:right;">ตรง 5</span><span class="val">${dataSelf.ik9[i]}</span></div></div>`;
+      <div class="slider-row"><input type="range" min="1" max="5" value="${dataSelf.ik9[i]}" data-ik9="${i}" aria-label="ข้อ ${i+1}"><span class="val">${dataSelf.ik9[i]}</span></div></div>`;
   });
   html += `</div>`;
 
@@ -729,7 +729,7 @@ async function renderIkigai(){
   <p class="hint" style="margin-top:-4px;margin-bottom:14px;">ลากแถบให้ตรงกับงานที่ทำอยู่จริงตอนนี้ 0 = ไม่ใช่เลย, 10 = ใช่เต็มที่ ถ้านึกตัวอย่างได้ พิมพ์สั้นๆ ไว้ในช่องด้านล่างด้วยจะช่วยให้เข้าใจง่ายขึ้น</p>`;
   IK_CIRCLES.forEach(([key,label,q])=>{
     html += `<div class="q"><div class="q-text"><b>${label}</b> — ${q}</div>
-      <div class="slider-row"><span class="hint" style="width:52px;">0 ไม่ใช่</span><input type="range" min="0" max="10" value="${dataSelf.circles[key]}" data-circ="${key}" aria-label="ให้คะแนน ${label} 0 ถึง 10"><span class="hint" style="width:52px;text-align:right;">ใช่ 10</span><span class="val">${dataSelf.circles[key]}</span></div></div>`;
+      <div class="slider-row"><input type="range" min="0" max="10" value="${dataSelf.circles[key]}" data-circ="${key}" aria-label="ให้คะแนน ${label} 0 ถึง 10"><span class="val">${dataSelf.circles[key]}</span></div></div>`;
   });
   html += `</div>`;
 
@@ -762,7 +762,7 @@ async function renderEVP(){
 
   html += `<div class="card"><h3 style="margin-top:0;color:var(--ink);">แบบสำรวจสั้น</h3>`;
   html += `<div class="q"><div class="q-text"><span class="q-id">S1</span>หากเพื่อนหรือคนรู้จักของคุณกำลังมองหางาน คุณจะแนะนำให้เขามาทำงานที่นี่มากน้อยเพียงใด (0 = ไม่แนะนำเลย, 10 = แนะนำอย่างยิ่ง)</div>
-    <div class="slider-row"><span class="hint" style="width:60px;">0 ไม่แนะนำ</span><input type="range" min="0" max="10" value="${dataSelf.enps}" id="enps" aria-label="คะแนนแนะนำที่ทำงาน 0 ถึง 10"><span class="hint" style="width:56px;text-align:right;">แนะนำ 10</span><span class="val" id="enpsVal">${dataSelf.enps}</span></div></div>`;
+    <div class="slider-row"><input type="range" min="0" max="10" value="${dataSelf.enps}" id="enps" aria-label="คะแนนแนะนำที่ทำงาน 0 ถึง 10"><span class="val" id="enpsVal">${dataSelf.enps}</span></div></div>`;
 
   html += `<div class="q"><div class="q-text"><span class="q-id">S2</span>ให้คะแนนเรื่องต่อไปนี้ 2 มุม — (ก) ที่นี่ทำได้ดีแค่ไหน / (ข) เรื่องนี้สำคัญกับคุณแค่ไหน (1 = น้อย, 5 = มาก)</div>`;
   EVP_PILLARS.forEach(([k,label])=>{
@@ -1293,6 +1293,14 @@ document.addEventListener('input', function(e){
 // บันทึกอัตโนมัติเมื่อมีการตอบ
 document.addEventListener('change', e=>{ if(e.target.closest && e.target.closest('#content')) scheduleAutoSave(); });
 document.addEventListener('input',  e=>{ if(e.target.closest && e.target.closest('#content')) scheduleAutoSave(); });
+/* สไลเดอร์ทุกตัว: เลขหนาข้างๆ ต้องขยับตามแถบทันที (ค่าเริ่มต้นเดิมค้างเพราะไม่มีตัวอัปเดต) */
+document.addEventListener('input', e=>{
+  const t = e.target;
+  if(!t.matches || !t.matches('input[type=range]')) return;
+  const row = t.closest('.slider-row'); if(!row) return;
+  const v = row.querySelector('.val');
+  if(v) v.textContent = t.value;
+});
 
 function tabFromHash(){
   const h = (location.hash||'').replace('#','');

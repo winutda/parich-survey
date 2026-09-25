@@ -131,6 +131,11 @@
   textarea{min-height:64px;}
   .row{display:flex;gap:14px;flex-wrap:wrap;}
   .slider-row{display:flex;align-items:center;gap:12px;margin-top:6px;}
+  @media (min-width:861px){
+    .slider-row{max-width:520px;}
+    .q .q-text, .q .hint{max-width:640px;}
+    .card p.hint{max-width:640px;}
+  }
     .slider-row input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:28px;background:transparent;cursor:pointer;}
   .slider-row input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--line-2);border-radius:2px;}
   .slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:var(--ochre);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);margin-top:-10px;cursor:pointer;}
@@ -358,7 +363,7 @@
       <div class="s">แบบประเมินเพื่อรู้จักตัวเอง</div>
     </div>
     <div id="tabs"></div>
-    <div class="rail-foot">แบบสอบถามพนักงานตอบเอง<br>ตอบแบบไม่ระบุตัวตน · ไม่มีการระบุชื่อ<br><span class="mono">เวอร์ชัน 8</span> · 24 ก.ย. 69</div>
+    <div class="rail-foot">แบบสอบถามพนักงานตอบเอง<br>ตอบแบบไม่ระบุตัวตน · ไม่มีการระบุชื่อ<br><span class="mono">เวอร์ชัน 9</span> · 24 ก.ย. 69</div>
   </nav>
   <div class="main">
     <div class="statusbar">

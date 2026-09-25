@@ -1,7 +1,7 @@
 /* Service worker — ทำให้เป็นเว็บแอปที่ติดตั้งได้และเปิดตอนออฟไลน์
    หน้า HTML ใช้ network-first: ออนไลน์อยู่ตอนไหนได้เวอร์ชันล่าสุดเสมอ ไม่มีเรื่องค้างของเก่าอีก
    เปลี่ยนอะไรใน index.html แล้ว อัปเวอร์ชัน CACHE ด้วยเสมอ */
-const CACHE = 'parich-survey-v8';
+const CACHE = 'parich-survey-v9';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', e => {
